@@ -279,7 +279,14 @@ function stepsOf(L) {
   FINAL.filter(K => K.k !== 'fill' || L.fill.length).forEach(K => out.push({ id: `final-${K.k}`, part: 0, ...K }));
   return out;
 }
-const pctOf = L => { const s = stepsOf(L), d = LP(L.n).steps; return Math.round(100 * s.filter(x => d[x.id]).length / s.length); };
+function stepFrac(L, st) {
+  const d = LP(L.n); if (d.steps[st.id]) return 1;
+  if (st.k === 'learn') { const pv = partVocab(L, st.part); return pv.length ? 0.95 * pv.filter(v => d.known.includes(v.w)).length / pv.length : 0; }
+  if (st.k === 'write') { const pc = partChars(L, st.part); return pc.length ? 0.95 * pc.filter(c => d.wrote.includes(c)).length / pc.length : 0; }
+  return 0;
+}
+const fracOf = L => stepsOf(L).reduce((a, x) => a + stepFrac(L, x), 0);
+const pctOf = L => Math.round(100 * fracOf(L) / stepsOf(L).length);
 const nextStep = L => { const d = LP(L.n).steps; return stepsOf(L).find(x => !d[x.id]); };
 const partVocab = (L, p) => L.vocab.filter(v => v.t === p);
 const partChars = (L, p) => [...new Set(partVocab(L, p).map(v => v.w).join(''))];
@@ -330,11 +337,11 @@ const topbar = back => `<div class="top">${back ? `<button type="button" class="
 /* ---------- home ---------- */
 function renderHome() {
   const cur = LS.find(L => pctOf(L) < 100) || LS[0], ns = nextStep(cur);
-  const total = LS.reduce((a, L) => a + stepsOf(L).length, 0), doneN = LS.reduce((a, L) => a + stepsOf(L).filter(x => LP(L.n).steps[x.id]).length, 0);
+  const total = LS.reduce((a, L) => a + stepsOf(L).length, 0), doneN = LS.reduce((a, L) => a + stepsOf(L).filter(x => LP(L.n).steps[x.id]).length, 0), fracN = LS.reduce((a, L) => a + fracOf(L), 0);
   $('#app').innerHTML = topbar('') + `
   <section class="banner ${cls(cur)}" data-han="学"><div class="kick">新HSK教程 · 4上</div><h1>${T('Lanjutkan belajar', 'Keep learning')}</h1>
     <p>Lesson ${cur.n} · ${esc(cur.zh)}${ns ? ` · ${T('berikutnya', 'next')}: ${N(ns)}` : ''}</p>
-    <div class="row"><div class="bprog"><i style="width:${Math.round(100 * doneN / total)}%"></i></div><span class="bpct">${doneN} / ${total} ${T('tahap', 'steps')}</span>
+    <div class="row"><div class="bprog"><i style="width:${Math.max(fracN ? 2 : 0, Math.round(100 * fracN / total))}%"></i></div><span class="bpct">${doneN} / ${total} ${T('tahap', 'steps')}</span>
     <button type="button" class="btn white" data-go="#l${cur.n}${ns ? '-' + ns.id : ''}">${ns ? T('Mulai', 'Start') : T('Buka', 'Open')} →</button></div></section>
   <div class="lgrid">${LS.map(L => {
     const p = pctOf(L), d = LP(L.n);
@@ -409,13 +416,18 @@ function wordQs(L, v) {
     { type: 'mean', v, opts: shuffle([v, ...dm]) },
     { type: 'use', v, sent: [v.ex[0].slice(0, at), v.ex[0].slice(at + v.w.length)], opts: shuffle([v, ...d3]) }];
 }
-function stLearn() { const { L, st } = S; S.items = partVocab(L, st.part); S.screen = 0; S.right = 0; S.wrong = []; S.total = S.items.length * 3; learnScreen(); }
-function startWord(L, idx) { S = { L, st: { k: 'learn', part: L.vocab[idx].t }, word: idx, items: [L.vocab[idx]], screen: 0, right: 0, wrong: [], total: 3 }; learnScreen(); }
+function stLearn() {
+  const { L, st } = S, d = LP(L.n); S.items = partVocab(L, st.part); S.right = 0; S.asked = 0; S.wrong = []; S.total = S.items.length * 3;
+  let start = S.items.findIndex(v => !d.known.includes(v.w)); if (start < 0 || d.steps[st.id]) start = 0;
+  S.screen = start * 3; if (start > 0) toast(T(`Lanjut dari kata ke-${start + 1}`, `Resuming at word ${start + 1}`)); learnScreen();
+}
+function markKnown() { if (S.screen % 3 !== 2) return; const v = S.items[Math.floor(S.screen / 3)], d = LP(S.L.n); if (v && !d.known.includes(v.w)) { d.known.push(v.w); save(); } }
+function startWord(L, idx) { S = { L, st: { k: 'learn', part: L.vocab[idx].t }, word: idx, items: [L.vocab[idx]], screen: 0, right: 0, asked: 0, wrong: [], total: 3 }; learnScreen(); }
 function learnScreen() {
   hideSheet(); redraw = learnScreen;
   const wi = Math.floor(S.screen / 3), phase = S.screen % 3, v = S.items[wi], info = `${wi + 1} / ${S.items.length} ${T('kata', 'words')}`;
-  if (!v) { const d = LP(S.L.n); S.items.forEach(x => d.known.includes(x.w) || d.known.push(x.w)); save(); const score = Math.round(100 * S.right / (S.items.length * 2));
-    return finishStep(`<div class="score">${score}%</div><p style="margin:0;font-weight:700">${T(`${S.right} dari ${S.items.length * 2} soal benar`, `${S.right} of ${S.items.length * 2} questions correct`)}</p>${reviewHTML(S.wrong)}`); }
+  if (!v) { const d = LP(S.L.n); S.items.forEach(x => d.known.includes(x.w) || d.known.push(x.w)); save(); const score = S.asked ? Math.round(100 * S.right / S.asked) : 100;
+    return finishStep(`<div class="score">${score}%</div><p style="margin:0;font-weight:700">${T(`${S.right} dari ${S.asked} soal benar`, `${S.right} of ${S.asked} questions correct`)}</p>${reviewHTML(S.wrong)}`); }
   if (phase === 0) {
     render(`<div class="card wcard"><span class="tag">${T('Kata baru', 'New word')} ${S.items.length > 1 ? `${wi + 1} ${T('dari', 'of')} ${S.items.length}` : ''}</span>
       <div class="w">${esc(v.w)}</div><div class="lrow"><span class="p">${esc(v.p)}</span>${spk(v.w)}</div><div><span class="pos">${esc(v.pos)}</span><span class="en">${esc(v.en)}</span></div>
@@ -609,7 +621,7 @@ document.addEventListener('click', e => {
   if (t.dataset.qa !== undefined) {
     if (S.answered) return; S.answered = true;
     const r = judge(S.cur, +t.dataset.qa);
-    if (r.ok) S.right++; else S.wrong.push(S.cur);
+    S.asked = (S.asked || 0) + 1; if (r.ok) S.right++; else S.wrong.push(S.cur);
     const last = S.mode === 'quiz' ? S.qi >= S.qs.length - 1 : false;
     showSheet(r.ok, r.fb, last ? T('Lihat hasil', 'See results') : T('Lanjut', 'Continue'));
     return;
@@ -617,7 +629,7 @@ document.addEventListener('click', e => {
   if (a === 'sheetnext') {
     hideSheet();
     if (S.mode === 'quiz') { S.qi++; if (S.qi < S.qs.length) { S.cur = S.qs[S.qi]; S.answered = false; drawQ(S.cur, S.qi / S.qs.length, `${S.qi + 1} / ${S.qs.length}`); } else S.onDone(); }
-    else { S.screen++; learnScreen(); }
+    else { markKnown(); S.screen++; learnScreen(); }
     return;
   }
   if (a === 'lnext') { S.screen++; learnScreen(); return; }
