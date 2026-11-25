@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -119,6 +119,9 @@ button{font-family:inherit;color:inherit}
 .nopy .py,.nopy .p{display:none}
 .setc{display:flex;gap:6px;align-items:center}
 .kicker .setc{margin-left:auto}
+.tog.lang b{opacity:.4;font-weight:900}.tog.lang b.on{opacity:1}
+.tog{white-space:nowrap}
+@media (max-width:560px){.top .stats{width:100%;justify-content:space-between}.tog{padding:5px 10px;font-size:.76rem}}
 .tog .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.35;margin-right:6px;vertical-align:1px}.tog[aria-pressed="true"] .dot{opacity:1}
 
 /* word card */
@@ -161,11 +164,12 @@ button{font-family:inherit;color:inherit}
 .qsent{font-family:var(--f-han);font-size:1.35rem;line-height:1.75}
 .qsent .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--ac);margin:0 3px;text-align:center;color:var(--ac);font-weight:900}
 .qsub{font-size:.92rem;color:var(--muted);font-weight:700}
+.qpy{font-size:1rem;color:var(--ac);font-weight:800;line-height:1.5;margin-top:-6px}
 .qopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:520px){.qopts{grid-template-columns:minmax(0,1fr)}}
 .qopt{border:2px solid var(--line);background:var(--card);border-radius:16px;padding:14px;cursor:pointer;text-align:left;font-size:1rem;font-weight:700;min-height:60px;display:flex;flex-direction:column;justify-content:center;gap:2px;box-shadow:0 4px 0 var(--line);transition:transform .08s}
 .qopt:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
-.qopt .z{font-size:1.35rem;font-weight:700}.qopt .py{font-size:.8rem;color:var(--muted)}
+.qopt .z{font-size:1.35rem;font-weight:700}.qopt .py{font-size:.85rem;color:var(--ac);font-weight:800}.qopt .oen{font-size:.8rem;color:var(--muted)}
 .qopt.right{border-color:var(--jade);background:var(--ok-bg);box-shadow:0 4px 0 var(--jade)}
 .qopt.wrong{border-color:var(--red);background:var(--bad-bg);box-shadow:0 4px 0 var(--red);animation:shake .3s}
 .qopt:disabled{cursor:default}
@@ -226,7 +230,7 @@ button{font-family:inherit;color:inherit}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 
-<div class="app" id="app"><p class="muted">Memuat pelajaran…</p></div>
+<div class="app" id="app"><p class="muted">Loading… · Memuat…</p></div>
 <div class="sheet" id="sheet" aria-live="polite"></div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -260,14 +264,14 @@ function streak() { const s = new Set(P.days); let n = 0; const d = new Date(); 
 let tt; function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('on'), 1300); }
 function addXP(n, msg) { if (!n) return; P.xp += n; touchDay(); save(); toast(`+${n} XP${msg ? ' · ' + msg : ''}`); const x = $('#xp'); if (x) x.textContent = P.xp; }
 const starsOf = b => b >= 100 ? 3 : b >= 80 ? 2 : b >= 60 ? 1 : 0;
-const starsHTML = (b, big) => { const s = starsOf(b); return `<span class="stars${big ? ' bigstars' : ''}" aria-label="${s} dari 3 bintang">${'★'.repeat(s)}<span class="off">${'★'.repeat(3 - s)}</span></span>`; };
+const starsHTML = (b, big) => { const s = starsOf(b); return `<span class="stars${big ? ' bigstars' : ''}" aria-label="${s} / 3 ${T('bintang', 'stars')}">${'★'.repeat(s)}<span class="off">${'★'.repeat(3 - s)}</span></span>`; };
 
 /* ---------- lesson structure ---------- */
 const KINDS = [
-  { k: 'learn', ic: '词', name: 'Kata baru', sub: '生词' }, { k: 'text', ic: '文', name: 'Teks', sub: '课文' },
-  { k: 'gram', ic: '法', name: 'Tata bahasa', sub: '语法' }, { k: 'write', ic: '写', name: 'Menulis', sub: '写字' },
-  { k: 'quiz', ic: '测', name: 'Kuis', sub: '小测' }];
-const FINAL = [{ k: 'fill', ic: '练', name: 'Latihan buku', sub: '综合练习' }, { k: 'test', ic: '考', name: 'Tes lesson', sub: '单元测试' }];
+  { k: 'learn', ic: '词', name: 'Kata baru', en: 'New words', sub: '生词' }, { k: 'text', ic: '文', name: 'Teks', en: 'Text', sub: '课文' },
+  { k: 'gram', ic: '法', name: 'Tata bahasa', en: 'Grammar', sub: '语法' }, { k: 'write', ic: '写', name: 'Menulis', en: 'Writing', sub: '写字' },
+  { k: 'quiz', ic: '测', name: 'Kuis', en: 'Quiz', sub: '小测' }];
+const FINAL = [{ k: 'fill', ic: '练', name: 'Latihan buku', en: 'Book exercises', sub: '综合练习' }, { k: 'test', ic: '考', name: 'Tes lesson', en: 'Lesson test', sub: '单元测试' }];
 function stepsOf(L) {
   const out = [], full = L.texts.some(t => t.lines.length);
   const kinds = full ? KINDS : KINDS.filter(K => ['learn', 'write', 'quiz'].includes(K.k));
@@ -282,13 +286,17 @@ const partChars = (L, p) => [...new Set(partVocab(L, p).map(v => v.w).join(''))]
 
 /* ---------- settings (pinyin on/off, slow audio) ---------- */
 const SKEY = 'hsk4a-set';
-const SET = { py: true, slow: false };
+const SET = { py: true, slow: false, lang: /^(id|ms)/i.test(navigator.language || '') ? 'id' : 'en' };
 try { Object.assign(SET, JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) {}
+const T = (id, en) => SET.lang === 'en' ? en : id;
+const N = st => T(st.name, st.en);
+let redraw = null;
 function applySet() {
   document.documentElement.classList.toggle('nopy', !SET.py);
+  document.documentElement.lang = SET.lang;
   document.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', !!SET[b.dataset.set]));
 }
-const setCtl = () => `<span class="setc"><button type="button" class="tog" data-set="py" aria-pressed="${SET.py}"><span class="dot"></span>Pinyin</button><button type="button" class="tog needspeech" data-set="slow" aria-pressed="${SET.slow}"><span class="dot"></span>Suara pelan</button></span>`;
+const setCtl = () => `<span class="setc"><button type="button" class="tog" data-set="py" aria-pressed="${SET.py}"><span class="dot"></span>Pinyin</button><button type="button" class="tog needspeech" data-set="slow" aria-pressed="${SET.slow}"><span class="dot"></span>${T('Suara pelan', 'Slow audio')}</button><button type="button" class="tog lang" data-set="lang" aria-label="${T('Ganti bahasa ke English', 'Switch language to Bahasa Indonesia')}"><b class="${SET.lang === 'id' ? 'on' : ''}">ID</b> · <b class="${SET.lang === 'en' ? 'on' : ''}">EN</b></button></span>`;
 
 /* ---------- speech ---------- */
 const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
@@ -299,14 +307,14 @@ function speak(text, onend) {
   if (!canSpeak) { onend && onend(); return; }
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/[A-Z]：/g, '').replace(/＿＿/g, '')); u.lang = 'zh-CN'; u.rate = SET.slow ? 0.5 : 0.85; if (zhVoice) u.voice = zhVoice; if (onend) { u.onend = onend; u.onerror = onend; } speechSynthesis.speak(u); } catch (e) { onend && onend(); }
 }
-const spk = (t, sm) => `<button type="button" class="spk${sm ? ' sm' : ''}" data-say="${esc(t)}" aria-label="Dengarkan">${I.spk}</button>`;
+const spk = (t, sm) => `<button type="button" class="spk${sm ? ' sm' : ''}" data-say="${esc(t)}" aria-label="${T('Dengarkan', 'Listen')}">${I.spk}</button>`;
 
 /* ---------- routing ---------- */
 let S = null, writerToken = 0, writer = null;
 function hideSheet() { const s = $('#sheet'); s.className = 'sheet'; }
 function route() {
   if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
-  writerToken++; S = null; hideSheet();
+  writerToken++; S = null; redraw = null; hideSheet();
   const h = location.hash; let m;
   if ((m = h.match(/^#l(\d+)-(p\d-\w+|final-\w+)$/)) && LS[+m[1] - 1]) { const L = LS[+m[1] - 1], st = stepsOf(L).find(x => x.id === m[2]); if (st) return startStep(L, st); }
   if ((m = h.match(/^#l(\d+)-w(\d+)$/)) && LS[+m[1] - 1] && LS[+m[1] - 1].vocab[+m[2]]) return startWord(LS[+m[1] - 1], +m[2]);
@@ -316,7 +324,7 @@ function route() {
 }
 const go = h => { if (location.hash === h) route(); else location.hash = h; };
 addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
-const topbar = back => `<div class="top">${back ? `<button type="button" class="back" data-go="${back}" aria-label="Kembali">←</button>` : ''}<div class="brand"><span class="seal">学</span>HSK 4A</div>
+const topbar = back => `<div class="top">${back ? `<button type="button" class="back" data-go="${back}" aria-label="${T('Kembali', 'Back')}">←</button>` : ''}<div class="brand"><span class="seal">学</span>HSK 4A</div>
   <div class="stats">${setCtl()}<span class="stat xp">${I.star}<span id="xp">${P.xp}</span></span><span class="stat fire">${I.fire}${streak()}</span></div></div>`;
 
 /* ---------- home ---------- */
@@ -324,10 +332,10 @@ function renderHome() {
   const cur = LS.find(L => pctOf(L) < 100) || LS[0], ns = nextStep(cur);
   const total = LS.reduce((a, L) => a + stepsOf(L).length, 0), doneN = LS.reduce((a, L) => a + stepsOf(L).filter(x => LP(L.n).steps[x.id]).length, 0);
   $('#app').innerHTML = topbar('') + `
-  <section class="banner ${cls(cur)}" data-han="学"><div class="kick">新HSK教程 · 4上</div><h1>Lanjutkan belajar</h1>
-    <p>Lesson ${cur.n} · ${esc(cur.zh)}${ns ? ` · berikutnya: ${ns.name}` : ''}</p>
-    <div class="row"><div class="bprog"><i style="width:${Math.round(100 * doneN / total)}%"></i></div><span class="bpct">${doneN} / ${total} tahap</span>
-    <button type="button" class="btn white" data-go="#l${cur.n}${ns ? '-' + ns.id : ''}">${ns ? 'Mulai' : 'Buka'} →</button></div></section>
+  <section class="banner ${cls(cur)}" data-han="学"><div class="kick">新HSK教程 · 4上</div><h1>${T('Lanjutkan belajar', 'Keep learning')}</h1>
+    <p>Lesson ${cur.n} · ${esc(cur.zh)}${ns ? ` · ${T('berikutnya', 'next')}: ${N(ns)}` : ''}</p>
+    <div class="row"><div class="bprog"><i style="width:${Math.round(100 * doneN / total)}%"></i></div><span class="bpct">${doneN} / ${total} ${T('tahap', 'steps')}</span>
+    <button type="button" class="btn white" data-go="#l${cur.n}${ns ? '-' + ns.id : ''}">${ns ? T('Mulai', 'Start') : T('Buka', 'Open')} →</button></div></section>
   <div class="lgrid">${LS.map(L => {
     const p = pctOf(L), d = LP(L.n);
     return `<button type="button" class="lcard ${cls(L)}${L === cur ? ' cur' : ''}" data-go="#l${L.n}"><span class="num">${L.n}</span>
@@ -343,50 +351,50 @@ function renderLesson(L) {
   let k = 0;
   const node = st => { const off = OFF[k++ % OFF.length], isNext = ns && ns.id === st.id;
     return `<button type="button" class="node${d.steps[st.id] ? ' done' : ''}${isNext ? ' next' : ''}" style="transform:translateX(${off}px)" data-go="#l${L.n}-${st.id}">
-      ${isNext ? '<span class="go">MULAI</span>' : ''}<span class="bub">${st.ic}</span>${d.steps[st.id] ? '<span class="chk">✓</span>' : ''}<span class="lbl">${st.name}</span></button>`; };
-  const parts = L.texts.map((t, i) => `<div class="part"><span class="pn">Bagian ${i + 1}</span><span class="pt">${esc(t.title)} · ${partVocab(L, i + 1).length} kata</span></div>
+      ${isNext ? `<span class="go">${T('MULAI', 'START')}</span>` : ''}<span class="bub">${st.ic}</span>${d.steps[st.id] ? '<span class="chk">✓</span>' : ''}<span class="lbl">${N(st)}</span></button>`; };
+  const parts = L.texts.map((t, i) => `<div class="part"><span class="pn">${T('Bagian', 'Part')} ${i + 1}</span><span class="pt">${esc(t.title)} · ${partVocab(L, i + 1).length} ${T('kata', 'words')}</span></div>
      <div class="trail">${all.filter(s => s.part === i + 1).map(node).join('')}</div>`).join('');
   $('#app').innerHTML = topbar('#home') + `<div class="${cls(L)}">
   <section class="banner" data-han="${esc(L.zh[0] === '“' ? L.zh[1] : L.zh[0])}"><div class="kick">第${L.n}课 · Lesson ${L.n}</div><h2>${esc(L.zh)}</h2><p><span class="py">${esc(L.py)} · </span>${esc(L.en)}</p>
     <div class="row"><div class="bprog"><i style="width:${p}%"></i></div><span class="bpct">${p}%</span>${starsHTML(d.best)}
-    ${ns ? `<button type="button" class="btn white" data-go="#l${L.n}-${ns.id}">Lanjut →</button>` : ''}</div></section>
-  ${parts}<div class="part"><span class="pn">Ulasan</span><span class="pt">${L.fill.length ? 'Latihan dari buku dan tes seluruh lesson' : 'Tes kosakata seluruh lesson'}</span></div>
+    ${ns ? `<button type="button" class="btn white" data-go="#l${L.n}-${ns.id}">${T('Lanjut', 'Continue')} →</button>` : ''}</div></section>
+  ${parts}<div class="part"><span class="pn">${T('Ulasan', 'Review')}</span><span class="pt">${L.fill.length ? T('Latihan dari buku dan tes seluruh lesson', 'Book exercises and a test on the whole lesson') : T('Tes kosakata seluruh lesson', 'Vocabulary test on the whole lesson')}</span></div>
   <div class="trail">${all.filter(s => !s.part).map(node).join('')}</div>
-  <div class="tools"><button type="button" class="btn ghost" data-go="#l${L.n}-words">Daftar kata · latihan per kata</button></div></div>`;
+  <div class="tools"><button type="button" class="btn ghost" data-go="#l${L.n}-words">${T('Daftar kata · latihan per kata', 'Word list · practice each word')}</button></div></div>`;
   const nx = $('.node.next'); if (nx) setTimeout(() => nx.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
 }
 
 /* ---------- word list ---------- */
 function renderWords(L) {
   const d = LP(L.n);
-  $('#app').innerHTML = topbar(`#l${L.n}`) + `<div class="${cls(L)}"><section class="banner" data-han="词"><div class="kick">第${L.n}课 · Daftar kata</div><h2>${L.vocab.length} kata baru</h2>
-    <p>Ketuk kata untuk belajar dan menjawab soalnya · ${d.known.length} sudah dipelajari</p></section>
+  $('#app').innerHTML = topbar(`#l${L.n}`) + `<div class="${cls(L)}"><section class="banner" data-han="词"><div class="kick">第${L.n}课 · ${T('Daftar kata', 'Word list')}</div><h2>${L.vocab.length} ${T('kata baru', 'new words')}</h2>
+    <p>${T('Ketuk kata untuk belajar dan menjawab soalnya', 'Tap a word to study it and answer its questions')} · ${d.known.length} ${T('sudah dipelajari', 'learned')}</p></section>
   <div class="vlist">${L.vocab.map((v, i) => `<button type="button" class="vc" data-go="#l${L.n}-w${i}"><span class="w z">${esc(v.w)}</span><span style="min-width:0"><span class="p">${esc(v.p)}</span><br><span class="en">${esc(v.en)}</span></span>
     <span class="badge${d.known.includes(v.w) ? ' ok' : ''}">${d.known.includes(v.w) ? '✓' : ''} 课文${v.t}</span></button>`).join('')}</div></div>`;
 }
 
 /* ---------- player shell ---------- */
 function shell(L, label, sub, inner, prog, info, closeTo) {
-  $('#app').innerHTML = `<div class="${cls(L)}"><div class="phead"><button type="button" class="close" data-go="${closeTo || '#l' + L.n}" aria-label="Tutup">✕</button>
+  $('#app').innerHTML = `<div class="${cls(L)}"><div class="phead"><button type="button" class="close" data-go="${closeTo || '#l' + L.n}" aria-label="${T('Tutup', 'Close')}">✕</button>
     <div class="pbar"><i style="width:${Math.max(3, Math.round(prog * 100))}%"></i></div><span class="pinfo">${info || ''}</span></div>
     <div class="kicker"><span class="pill2">${label}</span><b class="z">${sub}</b>${setCtl()}</div>${inner}</div>`;
 }
-const stepLabel = st => st.part ? `Bagian ${st.part} · ${st.name}` : st.name;
+const stepLabel = st => st.part ? `${T('Bagian', 'Part')} ${st.part} · ${N(st)}` : N(st);
 function startStep(L, st) { S = { L, st, i: 0 }; ({ learn: stLearn, text: stText, gram: stGram, write: stWrite, quiz: stQuiz, fill: stFill, test: stTest })[st.k](); }
-function render(inner, prog, info) { const { L, st } = S; if (S.word !== undefined) shell(L, 'Latihan kata', S.items[0].w, inner, prog, info, `#l${L.n}-words`); else shell(L, stepLabel(st), st.sub, inner, prog, info); }
+function render(inner, prog, info) { const { L, st } = S; if (S.word !== undefined) shell(L, T('Latihan kata', 'Word practice'), S.items[0].w, inner, prog, info, `#l${L.n}-words`); else shell(L, stepLabel(st), st.sub, inner, prog, info); }
 function finishStep(extra) {
-  hideSheet();
+  hideSheet(); redraw = () => finishStep(extra);
   const { L, st } = S;
   if (S.word !== undefined) {
-    render(`<div class="card done"><div class="medal">✓</div><h3>Kata ini sudah kamu latih</h3>${extra || ''}
-      <div class="actions" style="justify-content:center"><button type="button" class="btn ghost" data-go="#l${L.n}-words">Daftar kata</button>${L.vocab[S.word + 1] ? `<button type="button" class="btn" data-go="#l${L.n}-w${S.word + 1}">Kata berikutnya →</button>` : ''}</div></div>`, 1, '');
+    render(`<div class="card done"><div class="medal">✓</div><h3>${T('Kata ini sudah kamu latih', 'You practiced this word')}</h3>${extra || ''}
+      <div class="actions" style="justify-content:center"><button type="button" class="btn ghost" data-go="#l${L.n}-words">${T('Daftar kata', 'Word list')}</button>${L.vocab[S.word + 1] ? `<button type="button" class="btn" data-go="#l${L.n}-w${S.word + 1}">${T('Kata berikutnya', 'Next word')} →</button>` : ''}</div></div>`, 1, '');
     return;
   }
-  const d = LP(L.n), first = !d.steps[st.id]; d.steps[st.id] = true; save(); if (first) addXP(10, 'tahap selesai');
+  const d = LP(L.n), first = !d.steps[st.id]; d.steps[st.id] = true; save(); if (first) addXP(10, T('tahap selesai', 'step done'));
   const ns = nextStep(L);
-  render(`<div class="card done"><div class="medal">✓</div><h3>${st.name} selesai!</h3>${extra || ''}
-    <p class="muted" style="margin:0;font-weight:700">${ns ? `Berikutnya: ${ns.part ? 'Bagian ' + ns.part + ' · ' : ''}${ns.name}` : 'Semua tahap di lesson ini sudah selesai.'}</p>
-    <div class="actions" style="justify-content:center"><button type="button" class="btn ghost" data-go="#l${L.n}">Peta lesson</button>${ns ? `<button type="button" class="btn" data-go="#l${L.n}-${ns.id}">Lanjut →</button>` : LS[L.n] ? `<button type="button" class="btn" data-go="#l${L.n + 1}">Lesson ${L.n + 1} →</button>` : ''}</div></div>`, 1, '');
+  render(`<div class="card done"><div class="medal">✓</div><h3>${T(st.name + ' selesai!', st.en + ' done!')}</h3>${extra || ''}
+    <p class="muted" style="margin:0;font-weight:700">${ns ? `${T('Berikutnya', 'Next')}: ${ns.part ? T('Bagian ', 'Part ') + ns.part + ' · ' : ''}${N(ns)}` : T('Semua tahap di lesson ini sudah selesai.', 'Every step in this lesson is done.')}</p>
+    <div class="actions" style="justify-content:center"><button type="button" class="btn ghost" data-go="#l${L.n}">${T('Peta lesson', 'Lesson map')}</button>${ns ? `<button type="button" class="btn" data-go="#l${L.n}-${ns.id}">${T('Lanjut', 'Continue')} →</button>` : LS[L.n] ? `<button type="button" class="btn" data-go="#l${L.n + 1}">Lesson ${L.n + 1} →</button>` : ''}</div></div>`, 1, '');
 }
 
 /* ---------- word learning (per word: card → meaning question → usage question) ---------- */
@@ -404,16 +412,16 @@ function wordQs(L, v) {
 function stLearn() { const { L, st } = S; S.items = partVocab(L, st.part); S.screen = 0; S.right = 0; S.wrong = []; S.total = S.items.length * 3; learnScreen(); }
 function startWord(L, idx) { S = { L, st: { k: 'learn', part: L.vocab[idx].t }, word: idx, items: [L.vocab[idx]], screen: 0, right: 0, wrong: [], total: 3 }; learnScreen(); }
 function learnScreen() {
-  hideSheet();
-  const wi = Math.floor(S.screen / 3), phase = S.screen % 3, v = S.items[wi], info = `${wi + 1} / ${S.items.length} kata`;
+  hideSheet(); redraw = learnScreen;
+  const wi = Math.floor(S.screen / 3), phase = S.screen % 3, v = S.items[wi], info = `${wi + 1} / ${S.items.length} ${T('kata', 'words')}`;
   if (!v) { const d = LP(S.L.n); S.items.forEach(x => d.known.includes(x.w) || d.known.push(x.w)); save(); const score = Math.round(100 * S.right / (S.items.length * 2));
-    return finishStep(`<div class="score">${score}%</div><p style="margin:0;font-weight:700">${S.right} dari ${S.items.length * 2} soal benar</p>${reviewHTML(S.wrong)}`); }
+    return finishStep(`<div class="score">${score}%</div><p style="margin:0;font-weight:700">${T(`${S.right} dari ${S.items.length * 2} soal benar`, `${S.right} of ${S.items.length * 2} questions correct`)}</p>${reviewHTML(S.wrong)}`); }
   if (phase === 0) {
-    render(`<div class="card wcard"><span class="tag">Kata baru ${S.items.length > 1 ? `${wi + 1} dari ${S.items.length}` : ''}</span>
+    render(`<div class="card wcard"><span class="tag">${T('Kata baru', 'New word')} ${S.items.length > 1 ? `${wi + 1} ${T('dari', 'of')} ${S.items.length}` : ''}</span>
       <div class="w">${esc(v.w)}</div><div class="lrow"><span class="p">${esc(v.p)}</span>${spk(v.w)}</div><div><span class="pos">${esc(v.pos)}</span><span class="en">${esc(v.en)}</span></div>
-      <div class="info"><span class="tag">搭配 · pasangan kata</span><div class="col">${v.col.map(c => `<span class="chipc"><span class="z">${esc(c[0])}</span> <span class="py">${esc(c[1])}</span><br>${esc(c[2])}</span>`).join('')}</div>
-        <span class="tag">例句 · contoh kalimat</span><div class="exl">${spk(v.ex[0], 1)}<div><div class="z">${hlWord(v.ex[0], v.w)}</div><div class="py">${esc(v.ex[1])}</div><div class="en">${esc(v.ex[2])}</div></div></div></div></div>
-      <div class="actions"><button type="button" class="btn" data-act="lnext">Coba jawab soalnya →</button></div>`, S.screen / S.total, info);
+      <div class="info"><span class="tag">搭配 · ${T('pasangan kata', 'collocations')}</span><div class="col">${v.col.map(c => `<span class="chipc"><span class="z">${esc(c[0])}</span> <span class="py">${esc(c[1])}</span><br>${esc(c[2])}</span>`).join('')}</div>
+        <span class="tag">例句 · ${T('contoh kalimat', 'example sentence')}</span><div class="exl">${spk(v.ex[0], 1)}<div><div class="z">${hlWord(v.ex[0], v.w)}</div><div class="py">${esc(v.ex[1])}</div><div class="en">${esc(v.ex[2])}</div></div></div></div></div>
+      <div class="actions"><button type="button" class="btn" data-act="lnext">${T('Coba jawab soalnya', 'Try the questions')} →</button></div>`, S.screen / S.total, info);
     setTimeout(() => S && speak(v.w), 200);
     return;
   }
@@ -422,18 +430,35 @@ function learnScreen() {
 const hlWord = (s, w) => { const i = s.indexOf(w); return i < 0 ? esc(s) : esc(s.slice(0, i)) + `<span class="hl">${esc(w)}</span>` + esc(s.slice(i + w.length)); };
 
 /* ---------- generic question drawing / answering ---------- */
-const KLAB = { mean: 'Apa artinya?', use: 'Pakai dalam kalimat', rev: 'Pilih hanzi', py: 'Pilih pinyin', listen: 'Dengarkan', comp: 'Pemahaman teks', fill: 'Isi kata (dari buku)' };
+const KLAB = { mean: ['Apa artinya?', 'What does it mean?'], use: ['Pakai dalam kalimat', 'Use it in a sentence'], rev: ['Pilih hanzi', 'Pick the hanzi'], py: ['Pilih pinyin', 'Pick the pinyin'], listen: ['Dengarkan', 'Listen'], comp: ['Pemahaman teks', 'Reading comprehension'], fill: ['Isi kata (dari buku)', 'Fill in the word (from the book)'] };
+let VMAP = {};
+const pyOf = w => VMAP[w] || '';
+function blankPy(sent, wpy) {
+  if (!wpy || !sent) return '';
+  const base = c => c.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const src = sent.normalize('NFC'), idx = [], letters = [];
+  [...src].forEach((c, i) => { if (/[\p{L}]/u.test(c)) { idx.push(i); letters.push(base(c)); } });
+  const hay = letters.join(''), chars = [...src];
+  for (const alt of wpy.split('/')) {
+    const needle = [...alt.normalize('NFC')].filter(c => /[\p{L}]/u.test(c)).map(base).join('');
+    const at = needle ? hay.indexOf(needle) : -1;
+    if (at >= 0) { const a = idx[at], b = idx[at + needle.length - 1]; return chars.slice(0, a).join('') + '＿＿' + chars.slice(b + 1).join(''); }
+  }
+  return '';
+}
+const pyLine = t => t ? `<div class="qpy py">${esc(t)}</div>` : '';
 function drawQ(q, prog, info) {
-  const vo = (o, i, m) => `<button type="button" class="qopt" data-qa="${i}">${m === 'en' ? `<span>${esc(o.en)}</span>` : m === 'py' ? `<span style="font-weight:900">${esc(o.p)}</span>` : `<span class="z">${esc(o.w)}</span>`}</button>`;
+  if (S) redraw = () => { if (!S.answered) drawQ(q, prog, info); };
+  const vo = (o, i, m) => `<button type="button" class="qopt" data-qa="${i}">${m === 'en' ? `<span>${esc(o.en)}</span>` : m === 'py' ? `<span style="font-weight:900">${esc(o.p)}</span>` : `<span class="z">${esc(o.w)}</span><span class="py">${esc(o.p)}</span>`}</button>`;
   let pr = '', op = '';
-  if (q.type === 'mean') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span>${spk(q.v.w)}</div><div class="qsub">Pilih arti yang benar</div>`; op = q.opts.map((o, i) => vo(o, i, 'en')).join(''); }
-  if (q.type === 'use') { pr = `<div class="qsent">${esc(q.sent[0])}<span class="blank">?</span>${esc(q.sent[1])}</div><div class="qsub">${esc(q.v.ex[2])}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
-  if (q.type === 'rev') { pr = `<div class="qsent" style="font-family:var(--f-ui);font-weight:800">“${esc(q.v.en)}”</div><div class="qsub">Pilih hanzi yang tepat</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
-  if (q.type === 'py') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span></div><div class="qsub">Pilih pinyin yang benar</div>`; op = q.opts.map((o, i) => vo(o, i, 'py')).join(''); }
-  if (q.type === 'listen') { pr = `<div class="qprompt"><button type="button" class="btn" data-say="${esc(q.v.w)}">▶ Putar suara</button></div><div class="qsub">Kata apa yang kamu dengar?</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
-  if (q.type === 'fill') { const [a, b] = q.f.q.split('＿＿'); pr = `<div class="qsent">${esc(a)}<span class="blank">?</span>${esc(b ?? '')}</div><div class="qsub">${esc(q.f.full[2])}</div>`; op = q.opts.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o)}</span></button>`).join(''); }
-  if (q.type === 'comp') { pr = `<div class="qsent">${esc(q.c.q[0])}</div><div class="qsub">${esc(q.c.q[1])} · ${esc(q.c.q[2])}</div>`; op = q.c.o.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o[0])}</span><span class="py">${esc(o[1])} · ${esc(o[2])}</span></button>`).join(''); }
-  render(`<div class="card"><span class="qkind">${KLAB[q.type]}</span>${pr}<div class="qopts">${op}</div></div>`, prog, info);
+  if (q.type === 'mean') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span>${spk(q.v.w)}</div>${pyLine(q.v.p)}<div class="qsub">${T('Pilih arti yang benar', 'Choose the correct meaning')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'en')).join(''); }
+  if (q.type === 'use') { pr = `<div class="qsent">${esc(q.sent[0])}<span class="blank">?</span>${esc(q.sent[1])}</div>${pyLine(blankPy(q.v.ex[1], q.v.p))}<div class="qsub">${esc(q.v.ex[2])}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'rev') { pr = `<div class="qsent" style="font-family:var(--f-ui);font-weight:800">“${esc(q.v.en)}”</div><div class="qsub">${T('Pilih hanzi yang tepat', 'Choose the matching hanzi')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'py') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span></div><div class="qsub">${T('Pilih pinyin yang benar', 'Choose the correct pinyin')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'py')).join(''); }
+  if (q.type === 'listen') { pr = `<div class="qprompt"><button type="button" class="btn" data-say="${esc(q.v.w)}">▶ ${T('Putar suara', 'Play audio')}</button></div><div class="qsub">${T('Kata apa yang kamu dengar?', 'Which word did you hear?')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'fill') { const [a, b] = q.f.q.split('＿＿'); pr = `<div class="qsent">${esc(a)}<span class="blank">?</span>${esc(b ?? '')}</div>${pyLine(blankPy(q.f.full[1], pyOf(q.f.a)))}<div class="qsub">${esc(q.f.full[2])}</div>`; op = q.opts.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o)}</span><span class="py">${esc(pyOf(o))}</span></button>`).join(''); }
+  if (q.type === 'comp') { pr = `<div class="qsent">${esc(q.c.q[0])}</div>${pyLine(q.c.q[1])}<div class="qsub">${esc(q.c.q[2])}</div>`; op = q.c.o.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o[0])}</span><span class="py">${esc(o[1])}</span><span class="oen">${esc(o[2])}</span></button>`).join(''); }
+  render(`<div class="card"><span class="qkind">${T(...KLAB[q.type])}</span>${pr}<div class="qopts">${op}</div></div>`, prog, info);
   if (q.type === 'listen') setTimeout(() => S && speak(q.v.w), 250);
 }
 function judge(q, i) {
@@ -447,18 +472,19 @@ function judge(q, i) {
 }
 function showSheet(ok, fb, label) {
   const s = $('#sheet');
-  s.innerHTML = `<div class="in"><div class="txt"><b>${ok ? 'Benar!' : 'Belum tepat'}</b>${fb}</div><button type="button" class="btn" data-act="sheetnext">${label || 'Lanjut'}</button></div>`;
+  s.innerHTML = `<div class="in"><div class="txt"><b>${ok ? T('Benar!', 'Correct!') : T('Belum tepat', 'Not quite')}</b>${fb}</div><button type="button" class="btn" data-act="sheetnext">${label || T('Lanjut', 'Continue')}</button></div>`;
   s.className = 'sheet on ' + (ok ? 'ok' : 'no');
   setTimeout(() => { const b = s.querySelector('.btn'); b && b.focus({ preventScroll: true }); }, 50);
 }
-const reviewHTML = W => W.length ? `<div class="review"><span class="tag">Yang perlu diulang</span>${W.map(q => q.type === 'fill' ? `<div><span class="z">${esc(q.f.full[0])}</span></div>`
+const reviewHTML = W => W.length ? `<div class="review"><span class="tag">${T('Yang perlu diulang', 'Review these')}</span>${W.map(q => q.type === 'fill' ? `<div><span class="z">${esc(q.f.full[0])}</span></div>`
   : q.type === 'comp' ? `<div><span class="z">${esc(q.c.q[0])}</span> → <span class="z">${esc(q.c.o[q.c.a][0])}</span></div>` : `<div><span class="z">${esc(q.v.w)}</span><span class="py"> · ${esc(q.v.p)}</span> · ${esc(q.v.en)}</div>`).join('')}</div>` : '';
 
 /* ---------- text ---------- */
 let showEn = true;
 function stText() { S.shown = 1; S.autoSpeak = true; textShow(); }
 function textShow() {
-  const { L, st } = S, T = L.texts[st.part - 1], lines = T.lines, speakers = [...new Set(lines.map(l => l.s).filter(Boolean))];
+  redraw = () => { S.autoSpeak = false; textShow(); };
+  const { L, st } = S, TT = L.texts[st.part - 1], lines = TT.lines, speakers = [...new Set(lines.map(l => l.s).filter(Boolean))];
   const html = lines.slice(0, S.shown).map((l, i) => {
     const nw = i === S.shown - 1 ? ' new' : '';
     if (!l.s) return `<div class="para${nw}"><div style="flex:1;min-width:0"><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
@@ -466,11 +492,11 @@ function textShow() {
     return `<div class="say${r ? ' r' : ''}${nw}"><span class="av">${esc(l.s[0])}</span><div class="msg"><div class="who">${esc(l.s)}<span class="py"> · ${esc(l.sp)}</span></div><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
   }).join('');
   const all = S.shown >= lines.length;
-  render(`<div class="card"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="muted" style="font-weight:800;font-size:.88rem">${esc(T.title)}</span>
+  render(`<div class="card"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="muted" style="font-weight:800;font-size:.88rem">${esc(TT.title)}</span>
       <span class="toggles"><button type="button" class="tog" data-tg="en" aria-pressed="${showEn}"><span class="dot"></span>English</button></span></div>
     <div class="tlines ${showEn ? '' : 'hide-en'}" id="tl">${html}</div></div>
-    <div class="actions"><button type="button" class="btn ghost left needspeech" data-act="playall">▶ Putar semua</button>
-      ${all ? `<button type="button" class="btn" data-act="tcheck">Cek pemahaman →</button>` : `<button type="button" class="btn" data-act="tnext">Lanjut →</button>`}</div>`,
+    <div class="actions"><button type="button" class="btn ghost left needspeech" data-act="playall">▶ ${T('Putar semua', 'Play all')}</button>
+      ${all ? `<button type="button" class="btn" data-act="tcheck">${T('Cek pemahaman', 'Check understanding')} →</button>` : `<button type="button" class="btn" data-act="tnext">${T('Lanjut', 'Continue')} →</button>`}</div>`,
     0.6 * S.shown / lines.length, `${S.shown} / ${lines.length}`);
   if (S.autoSpeak) setTimeout(() => S && speak(lines[S.shown - 1].zh), 150);
   const tl = $('#tl'); if (tl && S.shown > 1) tl.lastElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -483,30 +509,31 @@ function playAll() {
 
 /* ---------- grammar ---------- */
 function stGram() {
+  redraw = stGram;
   const { L, st } = S, g = L.grammar[st.part - 1];
   render(`<div class="card"><span class="qkind">小语讲堂 ${st.part}</span><h3 style="margin:0;font-size:1.25rem;font-weight:900">${esc(g.title)}</h3><p style="margin:0;line-height:1.6;font-weight:600">${esc(g.note)}</p>
-    <span class="tag">Contoh</span>${g.ex.map(x => `<div class="exl">${spk(x[0], 1)}<div><div class="z">${esc(x[0])}</div><div class="py">${esc(x[1])}</div><div class="en">${esc(x[2])}</div></div></div>`).join('')}</div>
-    <div class="actions"><button type="button" class="btn" data-act="gdone">Saya mengerti ✓</button></div>`, 0.5, '');
+    <span class="tag">${T('Contoh', 'Examples')}</span>${g.ex.map(x => `<div class="exl">${spk(x[0], 1)}<div><div class="z">${esc(x[0])}</div><div class="py">${esc(x[1])}</div><div class="en">${esc(x[2])}</div></div></div>`).join('')}</div>
+    <div class="actions"><button type="button" class="btn" data-act="gdone">${T('Saya mengerti', 'Got it')} ✓</button></div>`, 0.5, '');
 }
 
 /* ---------- writing ---------- */
 let wMode = 'practice';
 function stWrite() {
-  S.chars = partChars(S.L, S.st.part); S.i = 0;
+  redraw = stWrite; S.chars = partChars(S.L, S.st.part); S.i = S.i || 0;
   render(`<div class="card"><div class="wwrap"><div class="board"><div class="cpy" id="cpy"></div><div class="box" id="box">
       <svg class="grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="50" x2="100" y2="50"/><line x1="50" y1="0" x2="50" y2="100"/><line x1="0" y1="0" x2="100" y2="100"/><line x1="100" y1="0" x2="0" y2="100"/></svg>
       <div id="target"></div></div><div class="wstatus" id="wst"></div></div>
     <div class="wside"><div class="wword" id="wword"></div>
-      <div class="modes"><button type="button" class="mbtn" data-wm="tutor">Tutor<small>lihat urutan</small></button><button type="button" class="mbtn" data-wm="practice">Latihan<small>ada bayangan</small></button><button type="button" class="mbtn" data-wm="test">Tes<small>dari ingatan</small></button></div>
-      <div class="opts"><label><input type="checkbox" id="oAuto" checked> Tutor dulu</label><label><input type="checkbox" id="oSlow"> Tutor pelan</label></div>
-      <div><p class="tag" style="margin:0 0 8px">Karakter di bagian ini</p><div class="cgrid" id="cgrid"></div></div></div></div></div>
-    <div class="actions"><button type="button" class="btn ghost left" data-act="wskip">Lewati</button><button type="button" class="btn" data-act="wdone">Selesai ✓</button></div>`, 0, '');
-  if (!window.HanziWriter || !CHARS) { $('#wst').innerHTML = '<span class="err">Data tulisan belum termuat. Muat ulang halaman.</span>'; return; }
+      <div class="modes"><button type="button" class="mbtn" data-wm="tutor">Tutor<small>${T('lihat urutan', 'watch order')}</small></button><button type="button" class="mbtn" data-wm="practice">${T('Latihan', 'Practice')}<small>${T('ada bayangan', 'with outline')}</small></button><button type="button" class="mbtn" data-wm="test">${T('Tes', 'Test')}<small>${T('dari ingatan', 'from memory')}</small></button></div>
+      <div class="opts"><label><input type="checkbox" id="oAuto" checked> ${T('Tutor dulu', 'Tutor first')}</label><label><input type="checkbox" id="oSlow"> ${T('Tutor pelan', 'Slow tutor')}</label></div>
+      <div><p class="tag" style="margin:0 0 8px">${T('Karakter di bagian ini', 'Characters in this part')}</p><div class="cgrid" id="cgrid"></div></div></div></div></div>
+    <div class="actions"><button type="button" class="btn ghost left" data-act="wskip">${T('Lewati', 'Skip')}</button><button type="button" class="btn" data-act="wdone">${T('Selesai', 'Done')} ✓</button></div>`, 0, '');
+  if (!window.HanziWriter || !CHARS) { $('#wst').innerHTML = `<span class="err">${T('Data tulisan belum termuat. Muat ulang halaman.', 'Stroke data has not loaded. Reload the page.')}</span>`; return; }
   writeChar($('#oAuto').checked ? 'tutor' : 'practice');
 }
 function writeProgress() {
   const { L, chars } = S, d = LP(L.n), n = chars.filter(c => d.wrote.includes(c)).length;
-  $('.pbar i').style.width = Math.max(3, Math.round(100 * n / chars.length)) + '%'; $('.pinfo').textContent = `${n} / ${chars.length} karakter`;
+  $('.pbar i').style.width = Math.max(3, Math.round(100 * n / chars.length)) + '%'; $('.pinfo').textContent = `${n} / ${chars.length} ${T('karakter', 'characters')}`;
   $('#cgrid').innerHTML = chars.map((c, i) => `<button type="button" class="cbtn${d.wrote.includes(c) ? ' ok' : ''}" data-wc="${i}" aria-current="${i === S.i}">${c}</button>`).join('');
 }
 function boxSize() { const w = $('.card').clientWidth - 48, narrow = innerWidth <= 760; return Math.max(220, Math.min(420, Math.floor(narrow ? w : Math.min(w * 0.56, innerHeight - 240)))); }
@@ -525,15 +552,16 @@ function writeChar(mode) {
     strokeColor: css('--ink'), outlineColor: css('--outline'), highlightColor: ac, drawingColor: css('--ink'),
     drawingWidth: Math.max(14, Math.round(size / 18)), strokeAnimationSpeed: slow ? 0.6 : 1.1, delayBetweenStrokes: slow ? 450 : 220, highlightOnComplete: true });
   const n = CHARS[c].strokes.length, st = (x, k) => { const e = $('#wst'); if (e) { e.textContent = x; e.className = 'wstatus' + (k ? ' ' + k : ''); } };
-  if (mode === 'tutor') { st(`Perhatikan urutan ${n} goresan…`); writer.animateCharacter({ onComplete: () => t === writerToken && setTimeout(() => t === writerToken && writeChar('practice'), 600) }); return; }
-  st(`${mode === 'test' ? 'Tes' : 'Latihan'} · 0 / ${n} goresan`);
+  if (mode === 'tutor') { st(T(`Perhatikan urutan ${n} goresan…`, `Watch the order of ${n} strokes…`)); writer.animateCharacter({ onComplete: () => t === writerToken && setTimeout(() => t === writerToken && writeChar('practice'), 600) }); return; }
+  const ML = mode === 'test' ? T('Tes', 'Test') : T('Latihan', 'Practice'), GS = T('goresan', 'strokes');
+  st(`${ML} · 0 / ${n} ${GS}`);
   writer.quiz({ showHintAfterMisses: mode === 'test' ? 3 : 2, leniency: 1.1,
-    onCorrectStroke: d => t === writerToken && st(`${mode === 'test' ? 'Tes' : 'Latihan'} · ${d.strokeNum + 1} / ${n} goresan${d.totalMistakes ? ` · salah ${d.totalMistakes}` : ''}`),
-    onMistake: d => t === writerToken && st(`Goresan ${d.strokeNum + 1} belum tepat${d.mistakesOnStroke >= (mode === 'test' ? 3 : 2) ? ' · ikuti petunjuk' : ''}`, 'bad'),
+    onCorrectStroke: d => t === writerToken && st(`${ML} · ${d.strokeNum + 1} / ${n} ${GS}${d.totalMistakes ? ` · ${T('salah', 'mistakes')} ${d.totalMistakes}` : ''}`),
+    onMistake: d => t === writerToken && st(T(`Goresan ${d.strokeNum + 1} belum tepat`, `Stroke ${d.strokeNum + 1} isn't right`) + (d.mistakesOnStroke >= (mode === 'test' ? 3 : 2) ? T(' · ikuti petunjuk', ' · follow the hint') : ''), 'bad'),
     onComplete: d => {
       if (t !== writerToken) return;
       const p = LP(S.L.n); if (!p.wrote.includes(c)) { p.wrote.push(c); save(); addXP(2, c); }
-      st(d.totalMistakes ? `Selesai · ${d.totalMistakes} kali salah` : 'Sempurna!', 'good'); writeProgress();
+      st(d.totalMistakes ? T(`Selesai · ${d.totalMistakes} kali salah`, `Done · ${d.totalMistakes} mistakes`) : T('Sempurna!', 'Perfect!'), 'good'); writeProgress();
       setTimeout(() => { if (t !== writerToken) return; const nx = nextWriteIdx(); if (nx < 0) finishStep(); else { S.i = nx; writeChar(mode === 'test' ? 'test' : ($('#oAuto').checked ? 'tutor' : 'practice')); } }, 1100);
     } });
 }
@@ -555,14 +583,14 @@ function vocabQs(L, pool, n) {
 const compQs = cs => cs.map(c => ({ type: 'comp', c }));
 const fillQs = fs => fs.map(f => ({ type: 'fill', f, opts: shuffle(f.bank) }));
 function runQuiz(qs, onDone) { S.qs = qs; S.qi = 0; S.right = 0; S.wrong = []; S.onDone = onDone; S.mode = 'quiz'; S.cur = qs[0]; S.answered = false; drawQ(S.cur, 0, `1 / ${qs.length}`); }
-function resultHTML() { const score = Math.round(100 * S.right / S.qs.length); return { score, html: `<div class="score">${score}%</div>${starsHTML(score, 1)}<p style="margin:0;font-weight:700">${S.right} dari ${S.qs.length} benar</p>${reviewHTML(S.wrong)}` }; }
-function stQuiz() { const { L, st } = S, pv = partVocab(L, st.part); runQuiz([...vocabQs(L, pv, Math.min(8, pv.length)), ...compQs(L.comp.filter(c => c.t === st.part))], () => { addXP(S.right, 'kuis'); finishStep(resultHTML().html); }); }
-function stFill() { runQuiz(shuffle(fillQs(S.L.fill)), () => { addXP(S.right, 'latihan'); finishStep(resultHTML().html); }); }
+function resultHTML() { const score = Math.round(100 * S.right / S.qs.length); return { score, html: `<div class="score">${score}%</div>${starsHTML(score, 1)}<p style="margin:0;font-weight:700">${T(`${S.right} dari ${S.qs.length} benar`, `${S.right} of ${S.qs.length} correct`)}</p>${reviewHTML(S.wrong)}` }; }
+function stQuiz() { const { L, st } = S, pv = partVocab(L, st.part); runQuiz([...vocabQs(L, pv, Math.min(8, pv.length)), ...compQs(L.comp.filter(c => c.t === st.part))], () => { addXP(S.right, T('kuis', 'quiz')); finishStep(resultHTML().html); }); }
+function stFill() { runQuiz(shuffle(fillQs(S.L.fill)), () => { addXP(S.right, T('latihan', 'practice')); finishStep(resultHTML().html); }); }
 function stTest() {
   const { L } = S;
   runQuiz(shuffle([...vocabQs(L, L.vocab, 10), ...fillQs(pick(L.fill, 3)), ...compQs(pick(L.comp, 2))]), () => {
     const r = resultHTML(), d = LP(L.n), was = d.best; if (r.score > d.best) { d.best = r.score; save(); }
-    addXP(S.right * 2, 'tes'); finishStep(r.html + (r.score > was ? '<p style="margin:0;color:var(--jade);font-weight:900">Skor terbaik baru!</p>' : '') + `<button type="button" class="btn ghost" data-act="retest">Ulangi tes</button>`);
+    addXP(S.right * 2, T('tes', 'test')); finishStep(r.html + (r.score > was ? '<p style="margin:0;color:var(--jade);font-weight:900">' + T('Skor terbaik baru!', 'New best score!') + '</p>' : '') + `<button type="button" class="btn ghost" data-act="retest">${T('Ulangi tes', 'Retake test')}</button>`);
   });
 }
 
@@ -571,8 +599,11 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.say) { speak(t.dataset.say); return; }
   if (t.dataset.go !== undefined) { go(t.dataset.go || '#home'); return; }
-  if (t.dataset.set) { const k = t.dataset.set; SET[k] = !SET[k]; try { localStorage.setItem(SKEY, JSON.stringify(SET)); } catch (e) {} applySet();
-    toast(k === 'py' ? (SET.py ? 'Pinyin ditampilkan' : 'Pinyin disembunyikan') : (SET.slow ? 'Suara pelan' : 'Suara normal')); if (k === 'slow') speak('你好，我们一起学习中文。'); return; }
+  if (t.dataset.set) { const k = t.dataset.set;
+    if (k === 'lang') SET.lang = SET.lang === 'en' ? 'id' : 'en'; else SET[k] = !SET[k];
+    try { localStorage.setItem(SKEY, JSON.stringify(SET)); } catch (e) {} applySet();
+    if (k === 'lang') { if (!S) route(); else if (redraw) redraw(); document.querySelectorAll('.setc').forEach(el => el.outerHTML = setCtl()); toast(T('Bahasa Indonesia', 'English')); return; }
+    toast(k === 'py' ? (SET.py ? T('Pinyin ditampilkan', 'Pinyin shown') : T('Pinyin disembunyikan', 'Pinyin hidden')) : (SET.slow ? T('Suara pelan', 'Slow audio') : T('Suara normal', 'Normal audio'))); if (k === 'slow') speak('你好，我们一起学习中文。'); return; }
   if (!S) return;
   const a = t.dataset.act, L = S.L;
   if (t.dataset.qa !== undefined) {
@@ -580,7 +611,7 @@ document.addEventListener('click', e => {
     const r = judge(S.cur, +t.dataset.qa);
     if (r.ok) S.right++; else S.wrong.push(S.cur);
     const last = S.mode === 'quiz' ? S.qi >= S.qs.length - 1 : false;
-    showSheet(r.ok, r.fb, last ? 'Lihat hasil' : 'Lanjut');
+    showSheet(r.ok, r.fb, last ? T('Lihat hasil', 'See results') : T('Lanjut', 'Continue'));
     return;
   }
   if (a === 'sheetnext') {
@@ -606,8 +637,8 @@ let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() 
 
 /* ---------- boot ---------- */
 applySet();
-fetch('lessons.json').then(r => r.json()).then(d => { LS = d; touchDay(); route(); fetch('chars.json').then(r => r.json()).then(c => { CHARS = c; if (S && S.st.k === 'write') startStep(S.L, S.st); }).catch(() => {}); })
-  .catch(() => { $('#app').innerHTML = '<p class="err">Data pelajaran gagal dimuat. Muat ulang halaman.</p>'; });
+fetch('lessons.json').then(r => r.json()).then(d => { LS = d; d.forEach(L => L.vocab.forEach(v => { VMAP[v.w] = VMAP[v.w] || v.p; })); touchDay(); route(); fetch('chars.json').then(r => r.json()).then(c => { CHARS = c; if (S && S.st.k === 'write') startStep(S.L, S.st); }).catch(() => {}); })
+  .catch(() => { $('#app').innerHTML = `<p class="err">${T('Data pelajaran gagal dimuat. Muat ulang halaman.', 'Lesson data failed to load. Reload the page.')}</p>`; });
 })();
 </script>
 
