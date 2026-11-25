@@ -412,20 +412,28 @@ function wordQs(L, v) {
   const d3 = [...byPos, ...rest].filter((x, i, a) => a.findIndex(y => y.en === x.en || y.w === x.w) === i).slice(0, 3);
   const dm = shuffle(others).filter((x, i, a) => x.en !== v.en && a.findIndex(y => y.en === x.en) === i).slice(0, 3);
   const at = v.ex[0].indexOf(v.w);
+  const cols = (v.col || []).filter(c => c[0].includes(v.w) && c[0] !== v.w && /[\u4e00-\u9fff]/.test(c[0].replace(v.w, '')));
+  const dp = shuffle(others).filter((x, i, a) => x.p !== v.p && a.findIndex(y => y.p === x.p) === i).slice(0, 3);
+  let mid;
+  if (cols.length) { const c = cols[Math.floor(Math.random() * cols.length)], k = c[0].indexOf(v.w); mid = { type: 'col', v, c, sent: [c[0].slice(0, k), c[0].slice(k + v.w.length)], opts: shuffle([v, ...shuffle(d3)]) }; }
+  else if (canSpeak) mid = { type: 'listen', v, opts: shuffle([v, ...d3]) };
+  else mid = { type: 'py', v, opts: shuffle([v, ...dp]) };
   return [
     { type: 'mean', v, opts: shuffle([v, ...dm]) },
+    mid,
     { type: 'use', v, sent: [v.ex[0].slice(0, at), v.ex[0].slice(at + v.w.length)], opts: shuffle([v, ...d3]) }];
 }
+const QN = 3, PER = QN + 1;
 function stLearn() {
-  const { L, st } = S, d = LP(L.n); S.items = partVocab(L, st.part); S.right = 0; S.asked = 0; S.wrong = []; S.total = S.items.length * 3;
+  const { L, st } = S, d = LP(L.n); S.items = partVocab(L, st.part); S.right = 0; S.asked = 0; S.wrong = []; S.total = S.items.length * PER;
   let start = S.items.findIndex(v => !d.known.includes(v.w)); if (start < 0 || d.steps[st.id]) start = 0;
-  S.screen = start * 3; if (start > 0) toast(T(`Lanjut dari kata ke-${start + 1}`, `Resuming at word ${start + 1}`)); learnScreen();
+  S.screen = start * PER; if (start > 0) toast(T(`Lanjut dari kata ke-${start + 1}`, `Resuming at word ${start + 1}`)); learnScreen();
 }
-function markKnown() { if (S.screen % 3 !== 2) return; const v = S.items[Math.floor(S.screen / 3)], d = LP(S.L.n); if (v && !d.known.includes(v.w)) { d.known.push(v.w); save(); } }
-function startWord(L, idx) { S = { L, st: { k: 'learn', part: L.vocab[idx].t }, word: idx, items: [L.vocab[idx]], screen: 0, right: 0, asked: 0, wrong: [], total: 3 }; learnScreen(); }
+function markKnown() { if (S.screen % PER !== QN) return; const v = S.items[Math.floor(S.screen / PER)], d = LP(S.L.n); if (v && !d.known.includes(v.w)) { d.known.push(v.w); save(); } }
+function startWord(L, idx) { S = { L, st: { k: 'learn', part: L.vocab[idx].t }, word: idx, items: [L.vocab[idx]], screen: 0, right: 0, asked: 0, wrong: [], total: PER }; learnScreen(); }
 function learnScreen() {
   hideSheet(); redraw = learnScreen;
-  const wi = Math.floor(S.screen / 3), phase = S.screen % 3, v = S.items[wi], info = `${wi + 1} / ${S.items.length} ${T('kata', 'words')}`;
+  const wi = Math.floor(S.screen / PER), phase = S.screen % PER, v = S.items[wi], info = `${wi + 1} / ${S.items.length} ${T('kata', 'words')}`;
   if (!v) { const d = LP(S.L.n); S.items.forEach(x => d.known.includes(x.w) || d.known.push(x.w)); save(); const score = S.asked ? Math.round(100 * S.right / S.asked) : 100;
     return finishStep(`<div class="score">${score}%</div><p style="margin:0;font-weight:700">${T(`${S.right} dari ${S.asked} soal benar`, `${S.right} of ${S.asked} questions correct`)}</p>${reviewHTML(S.wrong)}`); }
   if (phase === 0) {
@@ -442,7 +450,7 @@ function learnScreen() {
 const hlWord = (s, w) => { const i = s.indexOf(w); return i < 0 ? esc(s) : esc(s.slice(0, i)) + `<span class="hl">${esc(w)}</span>` + esc(s.slice(i + w.length)); };
 
 /* ---------- generic question drawing / answering ---------- */
-const KLAB = { mean: ['Apa artinya?', 'What does it mean?'], use: ['Pakai dalam kalimat', 'Use it in a sentence'], rev: ['Pilih hanzi', 'Pick the hanzi'], py: ['Pilih pinyin', 'Pick the pinyin'], listen: ['Dengarkan', 'Listen'], comp: ['Pemahaman teks', 'Reading comprehension'], fill: ['Isi kata (dari buku)', 'Fill in the word (from the book)'] };
+const KLAB = { mean: ['Apa artinya?', 'What does it mean?'], use: ['Pakai dalam kalimat', 'Use it in a sentence'], rev: ['Pilih hanzi', 'Pick the hanzi'], py: ['Pilih pinyin', 'Pick the pinyin'], listen: ['Dengarkan', 'Listen'], comp: ['Pemahaman teks', 'Reading comprehension'], fill: ['Isi kata (dari buku)', 'Fill in the word (from the book)'], col: ['Lengkapi pasangan kata', 'Complete the collocation'] };
 let VMAP = {};
 const pyOf = w => VMAP[w] || '';
 function blankPy(sent, wpy) {
@@ -465,6 +473,7 @@ function drawQ(q, prog, info) {
   let pr = '', op = '';
   if (q.type === 'mean') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span>${spk(q.v.w)}</div>${pyLine(q.v.p)}<div class="qsub">${T('Pilih arti yang benar', 'Choose the correct meaning')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'en')).join(''); }
   if (q.type === 'use') { pr = `<div class="qsent">${esc(q.sent[0])}<span class="blank">?</span>${esc(q.sent[1])}</div>${pyLine(blankPy(q.v.ex[1], q.v.p))}<div class="qsub">${esc(q.v.ex[2])}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'col') { pr = `<div class="qsent">${esc(q.sent[0])}<span class="blank">?</span>${esc(q.sent[1])}</div>${pyLine(blankPy(q.c[1], q.v.p))}<div class="qsub">“${esc(q.c[2])}” · ${T('kata mana yang cocok?', 'which word fits?')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
   if (q.type === 'rev') { pr = `<div class="qsent" style="font-family:var(--f-ui);font-weight:800">“${esc(q.v.en)}”</div><div class="qsub">${T('Pilih hanzi yang tepat', 'Choose the matching hanzi')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
   if (q.type === 'py') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span></div><div class="qsub">${T('Pilih pinyin yang benar', 'Choose the correct pinyin')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'py')).join(''); }
   if (q.type === 'listen') { pr = `<div class="qprompt"><button type="button" class="btn" data-say="${esc(q.v.w)}">▶ ${T('Putar suara', 'Play audio')}</button></div><div class="qsub">${T('Kata apa yang kamu dengar?', 'Which word did you hear?')}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
@@ -477,6 +486,7 @@ function judge(q, i) {
   let right, fb;
   if (q.type === 'fill') { right = q.opts.indexOf(q.f.a); fb = `<span class="z">${esc(q.f.full[0])}</span><span class="py">${esc(q.f.full[1])}</span><span>${esc(q.f.why)}</span>`; }
   else if (q.type === 'comp') { right = q.c.a; fb = q.c.why ? `${q.c.why[0] ? `<span class="z">${esc(q.c.why[0])}</span><span class="py">${esc(q.c.why[1])}</span>` : ''}<span>${esc(q.c.why[2])}</span>` : ''; }
+  else if (q.type === 'col') { right = q.opts.indexOf(q.v); fb = `<span class="z">${esc(q.c[0])}</span><span class="py">${esc(q.c[1])}</span><span>${esc(q.c[2])} · ${esc(q.v.w)} = ${esc(q.v.en)}</span>`; speak(q.c[0]); }
   else if (q.type === 'use') { right = q.opts.indexOf(q.v); fb = `<span class="z">${esc(q.v.ex[0])}</span><span class="py">${esc(q.v.ex[1])}</span><span>${esc(q.v.w)} = ${esc(q.v.en)}</span>`; speak(q.v.ex[0]); }
   else { right = q.opts.indexOf(q.v); fb = `<span><span class="z">${esc(q.v.w)}</span><span class="py"> · ${esc(q.v.p)}</span> · ${esc(q.v.en)}</span>`; speak(q.v.w); }
   document.querySelectorAll('[data-qa]').forEach(b => { b.disabled = true; const k = +b.dataset.qa; if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong'); });
@@ -586,7 +596,7 @@ function vocabQs(L, pool, n) {
   const types = canSpeak ? ['use', 'mean', 'rev', 'py', 'listen'] : ['use', 'mean', 'rev', 'py'];
   shuffle(pool).slice(0, n).forEach((v, i) => {
     const ty = types[i % types.length];
-    if (ty === 'use') { qs.push(wordQs(L, v)[1]); return; }
+    if (ty === 'use') { qs.push(wordQs(L, v)[2]); return; }
     const f = ty === 'mean' ? x => x.en : ty === 'py' ? x => x.p : x => x.w;
     qs.push({ type: ty, v, opts: shuffle([v, ...others(v, f)]) });
   });
