@@ -310,17 +310,35 @@ const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance 
 let zhVoice = null;
 function loadVoices() { try { const v = speechSynthesis.getVoices(); zhVoice = v.find(x => /zh[-_]CN/i.test(x.lang)) || v.find(x => /^zh/i.test(x.lang)) || null; } catch (e) {} }
 if (canSpeak) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) {} } else document.documentElement.classList.add('nospeech');
+// One voice at a time: every new request cancels the old one, waits until the engine is really quiet
+// (Safari/iOS keep talking for a moment after cancel()), and stale callbacks are ignored via a token.
+let sayTok = 0, curUtt = null, scr = 0;
+function stopSpeech() { sayTok++; if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {} }
 function speak(text, onend) {
   if (!canSpeak) { onend && onend(); return; }
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/[A-Z]：/g, '').replace(/＿＿/g, '')); u.lang = 'zh-CN'; u.rate = SET.slow ? 0.5 : 0.85; if (zhVoice) u.voice = zhVoice; if (onend) { u.onend = onend; u.onerror = onend; } speechSynthesis.speak(u); } catch (e) { onend && onend(); }
+  const tok = ++sayTok, t0 = Date.now();
+  try { speechSynthesis.cancel(); } catch (e) {}
+  const go = () => {
+    if (tok !== sayTok) return;
+    let busy = false; try { busy = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {}
+    if (busy && Date.now() - t0 < 800) { try { speechSynthesis.cancel(); } catch (e) {} setTimeout(go, 60); return; }
+    try {
+      const u = new SpeechSynthesisUtterance(text.replace(/[A-Z]：/g, '').replace(/＿＿/g, ''));
+      u.lang = 'zh-CN'; u.rate = SET.slow ? 0.5 : 0.85; if (zhVoice) u.voice = zhVoice;
+      const done = () => { if (tok === sayTok && onend) onend(); };
+      u.onend = done; u.onerror = done; curUtt = u; speechSynthesis.speak(u);
+    } catch (e) { onend && onend(); }
+  };
+  setTimeout(go, 90);
 }
+function speakLater(text, ms) { const k = scr; setTimeout(() => { if (k === scr && S) speak(text); }, ms); }
 const spk = (t, sm) => `<button type="button" class="spk${sm ? ' sm' : ''}" data-say="${esc(t)}" aria-label="${T('Dengarkan', 'Listen')}">${I.spk}</button>`;
 
 /* ---------- routing ---------- */
 let S = null, writerToken = 0, writer = null;
-function hideSheet() { const s = $('#sheet'); s.className = 'sheet'; }
+function hideSheet() { stopSpeech(); const s = $('#sheet'); s.className = 'sheet'; }
 function route() {
-  if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
+  stopSpeech();
   writerToken++; S = null; redraw = null; hideSheet();
   const h = location.hash; let m;
   if ((m = h.match(/^#l(\d+)-(p\d-\w+|final-\w+)$/)) && LS[+m[1] - 1]) { const L = LS[+m[1] - 1], st = stepsOf(L).find(x => x.id === m[2]); if (st) return startStep(L, st); }
@@ -388,7 +406,7 @@ function shell(L, label, sub, inner, prog, info, closeTo) {
 }
 const stepLabel = st => st.part ? `${T('Bagian', 'Part')} ${st.part} · ${N(st)}` : N(st);
 function startStep(L, st) { S = { L, st, i: 0 }; ({ learn: stLearn, text: stText, gram: stGram, write: stWrite, quiz: stQuiz, fill: stFill, test: stTest })[st.k](); }
-function render(inner, prog, info) { const { L, st } = S; if (S.word !== undefined) shell(L, T('Latihan kata', 'Word practice'), S.items[0].w, inner, prog, info, `#l${L.n}-words`); else shell(L, stepLabel(st), st.sub, inner, prog, info); }
+function render(inner, prog, info) { scr++; const { L, st } = S; if (S.word !== undefined) shell(L, T('Latihan kata', 'Word practice'), S.items[0].w, inner, prog, info, `#l${L.n}-words`); else shell(L, stepLabel(st), st.sub, inner, prog, info); }
 function finishStep(extra) {
   hideSheet(); redraw = () => finishStep(extra);
   const { L, st } = S;
@@ -442,7 +460,7 @@ function learnScreen() {
       <div class="info"><span class="tag">搭配 · ${T('pasangan kata', 'collocations')}</span><div class="col">${v.col.map(c => `<span class="chipc"><span class="z">${esc(c[0])}</span> <span class="py">${esc(c[1])}</span><br>${esc(c[2])}</span>`).join('')}</div>
         <span class="tag">例句 · ${T('contoh kalimat', 'example sentence')}</span><div class="exl">${spk(v.ex[0], 1)}<div><div class="z">${hlWord(v.ex[0], v.w)}</div><div class="py">${esc(v.ex[1])}</div><div class="en">${esc(v.ex[2])}</div></div></div></div></div>
       <div class="actions"><button type="button" class="btn" data-act="lnext">${T('Coba jawab soalnya', 'Try the questions')} →</button></div>`, S.screen / S.total, info);
-    setTimeout(() => S && speak(v.w), 200);
+    speakLater(v.w, 250);
     return;
   }
   S.cur = wordQs(S.L, v)[phase - 1]; S.answered = false; drawQ(S.cur, S.screen / S.total, info);
@@ -480,7 +498,7 @@ function drawQ(q, prog, info) {
   if (q.type === 'fill') { const [a, b] = q.f.q.split('＿＿'); pr = `<div class="qsent">${esc(a)}<span class="blank">?</span>${esc(b ?? '')}</div>${pyLine(blankPy(q.f.full[1], pyOf(q.f.a)))}<div class="qsub">${esc(q.f.full[2])}</div>`; op = q.opts.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o)}</span><span class="py">${esc(pyOf(o))}</span></button>`).join(''); }
   if (q.type === 'comp') { pr = `<div class="qsent">${esc(q.c.q[0])}</div>${pyLine(q.c.q[1])}<div class="qsub">${esc(q.c.q[2])}</div>`; op = q.c.o.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o[0])}</span><span class="py">${esc(o[1])}</span><span class="oen">${esc(o[2])}</span></button>`).join(''); }
   render(`<div class="card"><span class="qkind">${T(...KLAB[q.type])}</span>${pr}<div class="qopts">${op}</div></div>`, prog, info);
-  if (q.type === 'listen') setTimeout(() => S && speak(q.v.w), 250);
+  if (q.type === 'listen') speakLater(q.v.w, 250);
 }
 function judge(q, i) {
   let right, fb;
@@ -520,7 +538,7 @@ function textShow() {
     <div class="actions"><button type="button" class="btn ghost left needspeech" data-act="playall">▶ ${T('Putar semua', 'Play all')}</button>
       ${all ? `<button type="button" class="btn" data-act="tcheck">${T('Cek pemahaman', 'Check understanding')} →</button>` : `<button type="button" class="btn" data-act="tnext">${T('Lanjut', 'Continue')} →</button>`}</div>`,
     0.6 * S.shown / lines.length, `${S.shown} / ${lines.length}`);
-  if (S.autoSpeak) setTimeout(() => S && speak(lines[S.shown - 1].zh), 150);
+  if (S.autoSpeak) speakLater(lines[S.shown - 1].zh, 200);
   const tl = $('#tl'); if (tl && S.shown > 1) tl.lastElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 function playAll() {
