@@ -50,7 +50,7 @@ button{font-family:inherit;color:inherit}
 .ico{width:18px;height:18px;flex:none}
 
 /* top bar */
-.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .back{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:7px 12px;font-weight:800;cursor:pointer}
 .brand{font-weight:900;font-size:1.1rem;display:flex;align-items:center;gap:8px}
 .seal{width:32px;height:32px;border-radius:10px;background:var(--jade);color:var(--on);display:grid;place-items:center;font-family:var(--f-han);font-weight:900;box-shadow:0 3px 0 var(--jade-d)}
@@ -116,6 +116,10 @@ button{font-family:inherit;color:inherit}
 .spk svg{width:20px;height:20px;fill:#fff}
 .spk.sm{width:34px;height:34px;border-radius:11px}.spk.sm svg{width:16px;height:16px}
 .nospeech .spk,.nospeech .needspeech{display:none}
+.nopy .py,.nopy .p{display:none}
+.setc{display:flex;gap:6px;align-items:center}
+.kicker .setc{margin-left:auto}
+.tog .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.35;margin-right:6px;vertical-align:1px}.tog[aria-pressed="true"] .dot{opacity:1}
 
 /* word card */
 .wcard{align-items:center;text-align:center}
@@ -276,6 +280,16 @@ const nextStep = L => { const d = LP(L.n).steps; return stepsOf(L).find(x => !d[
 const partVocab = (L, p) => L.vocab.filter(v => v.t === p);
 const partChars = (L, p) => [...new Set(partVocab(L, p).map(v => v.w).join(''))];
 
+/* ---------- settings (pinyin on/off, slow audio) ---------- */
+const SKEY = 'hsk4a-set';
+const SET = { py: true, slow: false };
+try { Object.assign(SET, JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) {}
+function applySet() {
+  document.documentElement.classList.toggle('nopy', !SET.py);
+  document.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', !!SET[b.dataset.set]));
+}
+const setCtl = () => `<span class="setc"><button type="button" class="tog" data-set="py" aria-pressed="${SET.py}"><span class="dot"></span>Pinyin</button><button type="button" class="tog needspeech" data-set="slow" aria-pressed="${SET.slow}"><span class="dot"></span>Suara pelan</button></span>`;
+
 /* ---------- speech ---------- */
 const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 let zhVoice = null;
@@ -283,7 +297,7 @@ function loadVoices() { try { const v = speechSynthesis.getVoices(); zhVoice = v
 if (canSpeak) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) {} } else document.documentElement.classList.add('nospeech');
 function speak(text, onend) {
   if (!canSpeak) { onend && onend(); return; }
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/[A-Z]：/g, '').replace(/＿＿/g, '')); u.lang = 'zh-CN'; u.rate = 0.85; if (zhVoice) u.voice = zhVoice; if (onend) { u.onend = onend; u.onerror = onend; } speechSynthesis.speak(u); } catch (e) { onend && onend(); }
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/[A-Z]：/g, '').replace(/＿＿/g, '')); u.lang = 'zh-CN'; u.rate = SET.slow ? 0.5 : 0.85; if (zhVoice) u.voice = zhVoice; if (onend) { u.onend = onend; u.onerror = onend; } speechSynthesis.speak(u); } catch (e) { onend && onend(); }
 }
 const spk = (t, sm) => `<button type="button" class="spk${sm ? ' sm' : ''}" data-say="${esc(t)}" aria-label="Dengarkan">${I.spk}</button>`;
 
@@ -303,7 +317,7 @@ function route() {
 const go = h => { if (location.hash === h) route(); else location.hash = h; };
 addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
 const topbar = back => `<div class="top">${back ? `<button type="button" class="back" data-go="${back}" aria-label="Kembali">←</button>` : ''}<div class="brand"><span class="seal">学</span>HSK 4A</div>
-  <div class="stats"><span class="stat xp">${I.star}<span id="xp">${P.xp}</span></span><span class="stat fire">${I.fire}${streak()}</span></div></div>`;
+  <div class="stats">${setCtl()}<span class="stat xp">${I.star}<span id="xp">${P.xp}</span></span><span class="stat fire">${I.fire}${streak()}</span></div></div>`;
 
 /* ---------- home ---------- */
 function renderHome() {
@@ -333,7 +347,7 @@ function renderLesson(L) {
   const parts = L.texts.map((t, i) => `<div class="part"><span class="pn">Bagian ${i + 1}</span><span class="pt">${esc(t.title)} · ${partVocab(L, i + 1).length} kata</span></div>
      <div class="trail">${all.filter(s => s.part === i + 1).map(node).join('')}</div>`).join('');
   $('#app').innerHTML = topbar('#home') + `<div class="${cls(L)}">
-  <section class="banner" data-han="${esc(L.zh[0] === '“' ? L.zh[1] : L.zh[0])}"><div class="kick">第${L.n}课 · Lesson ${L.n}</div><h2>${esc(L.zh)}</h2><p>${esc(L.py)} · ${esc(L.en)}</p>
+  <section class="banner" data-han="${esc(L.zh[0] === '“' ? L.zh[1] : L.zh[0])}"><div class="kick">第${L.n}课 · Lesson ${L.n}</div><h2>${esc(L.zh)}</h2><p><span class="py">${esc(L.py)} · </span>${esc(L.en)}</p>
     <div class="row"><div class="bprog"><i style="width:${p}%"></i></div><span class="bpct">${p}%</span>${starsHTML(d.best)}
     ${ns ? `<button type="button" class="btn white" data-go="#l${L.n}-${ns.id}">Lanjut →</button>` : ''}</div></section>
   ${parts}<div class="part"><span class="pn">Ulasan</span><span class="pt">${L.fill.length ? 'Latihan dari buku dan tes seluruh lesson' : 'Tes kosakata seluruh lesson'}</span></div>
@@ -355,7 +369,7 @@ function renderWords(L) {
 function shell(L, label, sub, inner, prog, info, closeTo) {
   $('#app').innerHTML = `<div class="${cls(L)}"><div class="phead"><button type="button" class="close" data-go="${closeTo || '#l' + L.n}" aria-label="Tutup">✕</button>
     <div class="pbar"><i style="width:${Math.max(3, Math.round(prog * 100))}%"></i></div><span class="pinfo">${info || ''}</span></div>
-    <div class="kicker"><span class="pill2">${label}</span><b class="z">${sub}</b></div>${inner}</div>`;
+    <div class="kicker"><span class="pill2">${label}</span><b class="z">${sub}</b>${setCtl()}</div>${inner}</div>`;
 }
 const stepLabel = st => st.part ? `Bagian ${st.part} · ${st.name}` : st.name;
 function startStep(L, st) { S = { L, st, i: 0 }; ({ learn: stLearn, text: stText, gram: stGram, write: stWrite, quiz: stQuiz, fill: stFill, test: stTest })[st.k](); }
@@ -427,7 +441,7 @@ function judge(q, i) {
   if (q.type === 'fill') { right = q.opts.indexOf(q.f.a); fb = `<span class="z">${esc(q.f.full[0])}</span><span class="py">${esc(q.f.full[1])}</span><span>${esc(q.f.why)}</span>`; }
   else if (q.type === 'comp') { right = q.c.a; fb = q.c.why ? `${q.c.why[0] ? `<span class="z">${esc(q.c.why[0])}</span><span class="py">${esc(q.c.why[1])}</span>` : ''}<span>${esc(q.c.why[2])}</span>` : ''; }
   else if (q.type === 'use') { right = q.opts.indexOf(q.v); fb = `<span class="z">${esc(q.v.ex[0])}</span><span class="py">${esc(q.v.ex[1])}</span><span>${esc(q.v.w)} = ${esc(q.v.en)}</span>`; speak(q.v.ex[0]); }
-  else { right = q.opts.indexOf(q.v); fb = `<span><span class="z">${esc(q.v.w)}</span> · ${esc(q.v.p)} · ${esc(q.v.en)}</span>`; speak(q.v.w); }
+  else { right = q.opts.indexOf(q.v); fb = `<span><span class="z">${esc(q.v.w)}</span><span class="py"> · ${esc(q.v.p)}</span> · ${esc(q.v.en)}</span>`; speak(q.v.w); }
   document.querySelectorAll('[data-qa]').forEach(b => { b.disabled = true; const k = +b.dataset.qa; if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong'); });
   return { ok: i === right, fb };
 }
@@ -438,10 +452,10 @@ function showSheet(ok, fb, label) {
   setTimeout(() => { const b = s.querySelector('.btn'); b && b.focus({ preventScroll: true }); }, 50);
 }
 const reviewHTML = W => W.length ? `<div class="review"><span class="tag">Yang perlu diulang</span>${W.map(q => q.type === 'fill' ? `<div><span class="z">${esc(q.f.full[0])}</span></div>`
-  : q.type === 'comp' ? `<div><span class="z">${esc(q.c.q[0])}</span> → <span class="z">${esc(q.c.o[q.c.a][0])}</span></div>` : `<div><span class="z">${esc(q.v.w)}</span> · ${esc(q.v.p)} · ${esc(q.v.en)}</div>`).join('')}</div>` : '';
+  : q.type === 'comp' ? `<div><span class="z">${esc(q.c.q[0])}</span> → <span class="z">${esc(q.c.o[q.c.a][0])}</span></div>` : `<div><span class="z">${esc(q.v.w)}</span><span class="py"> · ${esc(q.v.p)}</span> · ${esc(q.v.en)}</div>`).join('')}</div>` : '';
 
 /* ---------- text ---------- */
-let showPy = true, showEn = true;
+let showEn = true;
 function stText() { S.shown = 1; S.autoSpeak = true; textShow(); }
 function textShow() {
   const { L, st } = S, T = L.texts[st.part - 1], lines = T.lines, speakers = [...new Set(lines.map(l => l.s).filter(Boolean))];
@@ -449,12 +463,12 @@ function textShow() {
     const nw = i === S.shown - 1 ? ' new' : '';
     if (!l.s) return `<div class="para${nw}"><div style="flex:1;min-width:0"><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
     const r = speakers.indexOf(l.s) % 2 === 1;
-    return `<div class="say${r ? ' r' : ''}${nw}"><span class="av">${esc(l.s[0])}</span><div class="msg"><div class="who">${esc(l.s)} · ${esc(l.sp)}</div><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
+    return `<div class="say${r ? ' r' : ''}${nw}"><span class="av">${esc(l.s[0])}</span><div class="msg"><div class="who">${esc(l.s)}<span class="py"> · ${esc(l.sp)}</span></div><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
   }).join('');
   const all = S.shown >= lines.length;
   render(`<div class="card"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="muted" style="font-weight:800;font-size:.88rem">${esc(T.title)}</span>
-      <span class="toggles"><button type="button" class="tog" data-tg="py" aria-pressed="${showPy}">Pinyin</button><button type="button" class="tog" data-tg="en" aria-pressed="${showEn}">English</button></span></div>
-    <div class="tlines ${showPy ? '' : 'hide-py'} ${showEn ? '' : 'hide-en'}" id="tl">${html}</div></div>
+      <span class="toggles"><button type="button" class="tog" data-tg="en" aria-pressed="${showEn}"><span class="dot"></span>English</button></span></div>
+    <div class="tlines ${showEn ? '' : 'hide-en'}" id="tl">${html}</div></div>
     <div class="actions"><button type="button" class="btn ghost left needspeech" data-act="playall">▶ Putar semua</button>
       ${all ? `<button type="button" class="btn" data-act="tcheck">Cek pemahaman →</button>` : `<button type="button" class="btn" data-act="tnext">Lanjut →</button>`}</div>`,
     0.6 * S.shown / lines.length, `${S.shown} / ${lines.length}`);
@@ -500,7 +514,7 @@ function writeChar(mode) {
   const t = ++writerToken; wMode = mode;
   const { L, chars } = S, c = chars[S.i], v = L.vocab.find(x => x.w.includes(c)), si = v.w.indexOf(c);
   document.querySelectorAll('[data-wm]').forEach(b => b.setAttribute('aria-pressed', b.dataset.wm === mode));
-  $('#cpy').textContent = `${c}  ${v.s[si] || ''}`;
+  $('#cpy').innerHTML = `${c} <span class="py">${esc(v.s[si] || '')}</span>`;
   $('#wword').innerHTML = `<span class="z">${esc(v.w)}</span><span class="p">${esc(v.p)}</span>${spk(v.w, 1)}<span class="e">${esc(v.en)}</span>`;
   writeProgress();
   const size = boxSize(); $('#box').style.setProperty('--size', size + 'px'); $('#target').innerHTML = '';
@@ -557,6 +571,8 @@ document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.say) { speak(t.dataset.say); return; }
   if (t.dataset.go !== undefined) { go(t.dataset.go || '#home'); return; }
+  if (t.dataset.set) { const k = t.dataset.set; SET[k] = !SET[k]; try { localStorage.setItem(SKEY, JSON.stringify(SET)); } catch (e) {} applySet();
+    toast(k === 'py' ? (SET.py ? 'Pinyin ditampilkan' : 'Pinyin disembunyikan') : (SET.slow ? 'Suara pelan' : 'Suara normal')); if (k === 'slow') speak('你好，我们一起学习中文。'); return; }
   if (!S) return;
   const a = t.dataset.act, L = S.L;
   if (t.dataset.qa !== undefined) {
@@ -577,7 +593,7 @@ document.addEventListener('click', e => {
   if (a === 'tnext') { S.shown++; S.autoSpeak = true; textShow(); return; }
   if (a === 'playall') { S.shown = L.texts[S.st.part - 1].lines.length; S.autoSpeak = false; textShow(); playAll(); return; }
   if (a === 'tcheck') { const cs = L.comp.filter(c => c.t === S.st.part); if (cs.length) runQuiz(compQs(cs), () => finishStep(resultHTML().html)); else finishStep(); return; }
-  if (t.dataset.tg) { if (t.dataset.tg === 'py') showPy = !showPy; else showEn = !showEn; S.autoSpeak = false; textShow(); return; }
+  if (t.dataset.tg) { showEn = !showEn; S.autoSpeak = false; textShow(); return; }
   if (a === 'gdone') { finishStep(); return; }
   if (t.dataset.wm) { writeChar(t.dataset.wm); return; }
   if (t.dataset.wc !== undefined) { S.i = +t.dataset.wc; writeChar($('#oAuto').checked ? 'tutor' : 'practice'); return; }
@@ -589,6 +605,7 @@ document.addEventListener('change', e => { if (e.target.id === 'oSlow' && S && S
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (S && S.st.k === 'write' && CHARS && $('#box')) writeChar(wMode === 'tutor' ? 'practice' : wMode); }, 250); });
 
 /* ---------- boot ---------- */
+applySet();
 fetch('lessons.json').then(r => r.json()).then(d => { LS = d; touchDay(); route(); fetch('chars.json').then(r => r.json()).then(c => { CHARS = c; if (S && S.st.k === 'write') startStep(S.L, S.st); }).catch(() => {}); })
   .catch(() => { $('#app').innerHTML = '<p class="err">Data pelajaran gagal dimuat. Muat ulang halaman.</p>'; });
 })();
