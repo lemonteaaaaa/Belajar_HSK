@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HSK 4A Study Path</title>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: practice-app shell — home = banner + colour-coded lesson cards; lesson = banner + zigzag step path per text; step = focused player with progress bar and a feedback sheet that slides up from the bottom */
+:root{
+  --bg:#f3f6f2; --card:#ffffff; --ink:#17211b; --muted:#5f6c64; --line:#dfe6e0; --soft:#ebf0ec;
+  --jade:#1f8a55; --jade-d:#16663f; --on:#ffffff; --gold:#e5a50f; --gold-d:#b98200; --red:#d2462f; --red-d:#a3321f;
+  --ok-bg:#dcf3e6; --ok-ink:#155c37; --bad-bg:#fde4df; --bad-ink:#9d2f1e;
+  --a1:#1f8a55; --a1d:#16663f; --a2:#13808c; --a2d:#0c5f68; --a3:#c47a10; --a3d:#95590a; --a4:#c9533b; --a4d:#9a3b27; --a5:#4f5fc0; --a5d:#38469a;
+  --grid:#5fa37a; --grid-soft:#c3dfcc; --outline:#dde5df;
+  --f-ui:Nunito,ui-rounded,system-ui,-apple-system,'Segoe UI',sans-serif; --f-han:'Noto Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101512; --card:#19201b; --ink:#eef3ef; --muted:#a3aea7; --line:#2a332d; --soft:#222a25;
+  --jade:#3fbf7c; --jade-d:#27885a; --on:#0b1710; --gold:#f3bd3f; --gold-d:#b98a1d; --red:#ff7a62; --red-d:#c2533f;
+  --ok-bg:#173527; --ok-ink:#8ee0b1; --bad-bg:#3d1f1a; --bad-ink:#ffb2a3;
+  --a1:#3fbf7c; --a1d:#27885a; --a2:#3cb6c2; --a2d:#24828c; --a3:#f0a63a; --a3d:#b47722; --a4:#f0806a; --a4d:#b4594a; --a5:#8794ec; --a5d:#5f6bc0;
+  --grid:#5fb886; --grid-soft:#2d4737; --outline:#323b35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101512; --card:#19201b; --ink:#eef3ef; --muted:#a3aea7; --line:#2a332d; --soft:#222a25;
+  --jade:#3fbf7c; --jade-d:#27885a; --on:#0b1710; --gold:#f3bd3f; --gold-d:#b98a1d; --red:#ff7a62; --red-d:#c2533f;
+  --ok-bg:#173527; --ok-ink:#8ee0b1; --bad-bg:#3d1f1a; --bad-ink:#ffb2a3;
+  --a1:#3fbf7c; --a1d:#27885a; --a2:#3cb6c2; --a2d:#24828c; --a3:#f0a63a; --a3d:#b47722; --a4:#f0806a; --a4d:#b4594a; --a5:#8794ec; --a5d:#5f6bc0;
+  --grid:#5fb886; --grid-soft:#2d4737; --outline:#323b35; color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:15px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px}
+.app{max-width:880px;margin:0 auto}
+button{font-family:inherit;color:inherit}
+.z{font-family:var(--f-han)}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--jade);outline-offset:2px}
+.c1{--ac:var(--a1);--acd:var(--a1d)}.c2{--ac:var(--a2);--acd:var(--a2d)}.c3{--ac:var(--a3);--acd:var(--a3d)}.c4{--ac:var(--a4);--acd:var(--a4d)}.c5{--ac:var(--a5);--acd:var(--a5d)}
+
+/* chunky buttons */
+.btn{border:0;background:var(--ac,var(--jade));color:var(--on);border-radius:16px;padding:14px 22px;font-weight:900;font-size:1rem;letter-spacing:.02em;cursor:pointer;box-shadow:0 4px 0 var(--acd,var(--jade-d));transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--acd,var(--jade-d))}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
+.btn.white{background:#fff;color:#17211b;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.btn.wide{width:100%}
+.tag{font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ico{width:18px;height:18px;flex:none}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.back{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:7px 12px;font-weight:800;cursor:pointer}
+.brand{font-weight:900;font-size:1.1rem;display:flex;align-items:center;gap:8px}
+.seal{width:32px;height:32px;border-radius:10px;background:var(--jade);color:var(--on);display:grid;place-items:center;font-family:var(--f-han);font-weight:900;box-shadow:0 3px 0 var(--jade-d)}
+.stats{margin-left:auto;display:flex;gap:8px}
+.stat{display:flex;align-items:center;gap:5px;font-weight:900;font-variant-numeric:tabular-nums;font-size:.95rem}
+.stat.xp{color:var(--gold)}.stat.fire{color:var(--red)}
+
+/* home */
+.banner{position:relative;overflow:hidden;border-radius:24px;padding:22px 22px 20px;color:#fff;background:linear-gradient(135deg,var(--ac),var(--acd));margin-bottom:18px;box-shadow:0 6px 0 var(--acd)}
+.banner::before{content:"";position:absolute;inset:0;opacity:.13;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:44px 44px;background-position:-1px -1px;pointer-events:none}
+.banner::after{content:attr(data-han);position:absolute;right:-6px;bottom:-34px;font-family:var(--f-han);font-weight:900;font-size:9rem;line-height:1;opacity:.14;pointer-events:none}
+.banner > *{position:relative;z-index:1}
+.banner .kick{font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
+.banner h1,.banner h2{margin:4px 0 2px;font-family:var(--f-han);font-weight:900;font-size:clamp(1.6rem,5vw,2.1rem);text-wrap:balance}
+.banner p{margin:0;opacity:.92;font-weight:700}
+.banner .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px}
+.bprog{flex:1 1 180px;height:12px;border-radius:99px;background:rgba(255,255,255,.28);overflow:hidden}.bprog i{display:block;height:100%;background:#fff;border-radius:99px}
+.bpct{font-weight:900;font-variant-numeric:tabular-nums}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,370px),1fr));gap:14px}
+.lcard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px;cursor:pointer;text-align:left;box-shadow:0 4px 0 var(--line);transition:transform .08s}
+.lcard:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.lcard.cur{border-color:var(--ac);box-shadow:0 4px 0 var(--acd)}
+.num{width:58px;height:58px;border-radius:18px;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:900;font-size:1.5rem;box-shadow:0 4px 0 var(--acd)}
+.lcard .t{font-family:var(--f-han);font-weight:700;font-size:1.08rem;display:block}
+.lcard .e{font-size:.82rem;color:var(--muted);display:block;font-weight:700}
+.lmeta{display:flex;align-items:center;gap:10px;margin-top:8px}
+.mini{flex:1;height:8px;border-radius:99px;background:var(--soft);overflow:hidden}.mini i{display:block;height:100%;background:var(--ac);border-radius:99px}
+.lmeta span{font-size:.75rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.stars{display:inline-flex;gap:1px;color:var(--gold)}.stars .off{color:var(--line)}
+
+/* lesson path */
+.part{margin:22px 0 6px;display:flex;align-items:center;gap:10px}
+.part .pn{background:var(--ac);color:#fff;border-radius:12px;padding:6px 11px;font-weight:900;font-size:.85rem;box-shadow:0 3px 0 var(--acd);white-space:nowrap}
+.part .pt{font-weight:800;font-size:.86rem;color:var(--muted);min-width:0}
+.trail{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0}
+.node{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;cursor:pointer;padding:0;position:relative}
+.node .bub{width:74px;height:70px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-han);font-size:1.7rem;font-weight:900;background:var(--soft);color:var(--muted);box-shadow:0 6px 0 var(--line);transition:transform .08s}
+.node:active .bub{transform:translateY(4px);box-shadow:0 2px 0 var(--line)}
+.node.done .bub{background:var(--ac);color:#fff;box-shadow:0 6px 0 var(--acd)}
+.node.next .bub{background:var(--card);color:var(--ac);border:4px solid var(--ac);box-shadow:0 6px 0 var(--acd)}
+.node .lbl{font-weight:800;font-size:.8rem}
+.node .chk{position:absolute;top:-2px;right:-6px;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:900;box-shadow:0 2px 0 var(--gold-d)}
+.node .go{position:absolute;top:-34px;background:var(--card);border:2px solid var(--line);color:var(--ac);font-weight:900;font-size:.75rem;letter-spacing:.06em;padding:4px 10px;border-radius:10px;white-space:nowrap;animation:bob 1.4s ease-in-out infinite}
+.node .go::after{content:"";position:absolute;left:50%;bottom:-7px;width:10px;height:10px;background:var(--card);border-right:2px solid var(--line);border-bottom:2px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.node.next{margin-top:30px}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+/* player */
+.phead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.close{width:40px;height:40px;border-radius:50%;border:0;background:transparent;font-size:1.4rem;font-weight:900;color:var(--muted);cursor:pointer;flex:none}
+.pbar{flex:1;height:14px;background:var(--soft);border-radius:99px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--ac);border-radius:99px;transition:width .35s;position:relative}
+.pbar i::after{content:"";position:absolute;left:8px;right:8px;top:3px;height:3px;border-radius:9px;background:rgba(255,255,255,.35)}
+.pinfo{font-size:.82rem;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kicker{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.kicker .pill2{background:var(--ac);color:#fff;border-radius:10px;padding:4px 10px;font-weight:900;font-size:.78rem}
+.kicker b{font-size:1.15rem;font-weight:900}
+.card{background:var(--card);border:2px solid var(--line);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.actions{display:flex;gap:12px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:16px}
+.actions .left{margin-right:auto}
+.spk{border:0;background:var(--ac,var(--jade));width:44px;height:44px;border-radius:14px;cursor:pointer;display:inline-grid;place-items:center;flex:none;box-shadow:0 3px 0 var(--acd,var(--jade-d))}
+.spk:active{transform:translateY(2px);box-shadow:0 1px 0 var(--acd,var(--jade-d))}
+.spk svg{width:20px;height:20px;fill:#fff}
+.spk.sm{width:34px;height:34px;border-radius:11px}.spk.sm svg{width:16px;height:16px}
+.nospeech .spk,.nospeech .needspeech{display:none}
+
+/* word card */
+.wcard{align-items:center;text-align:center}
+.wcard .w{font-family:var(--f-han);font-size:clamp(3.4rem,13vw,5rem);font-weight:900;line-height:1.05}
+.wcard .p{font-size:1.5rem;font-weight:900;color:var(--ac)}
+.wcard .en{font-size:1.08rem;font-weight:700}
+.pos{display:inline-block;background:var(--soft);border-radius:8px;padding:2px 8px;font-size:.78rem;font-weight:800;color:var(--muted);margin-right:6px}
+.lrow{display:flex;align-items:center;gap:12px;justify-content:center}
+.info{width:100%;text-align:left;display:flex;flex-direction:column;gap:10px;border-top:2px dashed var(--line);padding-top:14px}
+.col{display:flex;flex-wrap:wrap;gap:8px}
+.chipc{background:var(--soft);border-radius:12px;padding:7px 11px;font-size:.86rem;line-height:1.35}
+.chipc .z{font-weight:700;font-size:1rem}.chipc .py{color:var(--muted);font-size:.78rem;font-weight:700}
+.exl{display:flex;gap:12px;align-items:flex-start}
+.exl .z{font-size:1.12rem;line-height:1.55}.exl .py{font-size:.84rem;color:var(--muted);font-weight:700}.exl .en{font-size:.86rem;font-style:italic}
+.hl{color:var(--ac);font-weight:900}
+
+/* text */
+.tlines{display:flex;flex-direction:column;gap:12px}
+.say{display:flex;gap:10px;align-items:flex-end;max-width:94%}
+.say.r{align-self:flex-end;flex-direction:row-reverse}
+.av{width:40px;height:40px;border-radius:14px;background:var(--ac);color:#fff;display:grid;place-items:center;font-family:var(--f-han);font-weight:900;flex:none;box-shadow:0 3px 0 var(--acd)}
+.say.r .av{background:var(--gold);box-shadow:0 3px 0 var(--gold-d)}
+.msg{background:var(--soft);border-radius:18px 18px 18px 6px;padding:11px 13px;min-width:0}
+.say.r .msg{border-radius:18px 18px 6px 18px}
+.msg .who{font-size:.74rem;font-weight:900;color:var(--muted);margin-bottom:3px}
+.msg .z,.para .z{font-size:1.15rem;line-height:1.6}.msg .py,.para .py{font-size:.84rem;color:var(--muted);font-weight:700;line-height:1.5}.msg .en,.para .en{font-size:.86rem;font-style:italic;margin-top:3px}
+.para{background:var(--soft);border-radius:18px;padding:13px 15px;display:flex;gap:12px;align-items:flex-start}
+.hide-py .py{display:none}.hide-en .en{display:none}
+.toggles{display:flex;gap:6px;margin-left:auto}
+.tog{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:.8rem;font-weight:900;cursor:pointer}
+.tog[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.new{animation:pop .3s ease-out}
+@keyframes pop{from{opacity:.1;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+
+/* quiz */
+.qkind{font-size:.8rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--ac)}
+.qprompt{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.qbig{font-family:var(--f-han);font-size:clamp(2.8rem,10vw,3.8rem);font-weight:900;line-height:1.1}
+.qsent{font-family:var(--f-han);font-size:1.35rem;line-height:1.75}
+.qsent .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--ac);margin:0 3px;text-align:center;color:var(--ac);font-weight:900}
+.qsub{font-size:.92rem;color:var(--muted);font-weight:700}
+.qopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:520px){.qopts{grid-template-columns:minmax(0,1fr)}}
+.qopt{border:2px solid var(--line);background:var(--card);border-radius:16px;padding:14px;cursor:pointer;text-align:left;font-size:1rem;font-weight:700;min-height:60px;display:flex;flex-direction:column;justify-content:center;gap:2px;box-shadow:0 4px 0 var(--line);transition:transform .08s}
+.qopt:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.qopt .z{font-size:1.35rem;font-weight:700}.qopt .py{font-size:.8rem;color:var(--muted)}
+.qopt.right{border-color:var(--jade);background:var(--ok-bg);box-shadow:0 4px 0 var(--jade)}
+.qopt.wrong{border-color:var(--red);background:var(--bad-bg);box-shadow:0 4px 0 var(--red);animation:shake .3s}
+.qopt:disabled{cursor:default}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:15;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));transform:translateY(105%);transition:transform .25s ease-out;border-top:2px solid transparent}
+.sheet.on{transform:none}
+.sheet.ok{background:var(--ok-bg);color:var(--ok-ink);border-color:var(--jade)}.sheet.no{background:var(--bad-bg);color:var(--bad-ink);border-color:var(--red)}
+.sheet .in{max-width:880px;margin:0 auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.sheet .txt{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:.92rem;line-height:1.45}
+.sheet .txt b{font-size:1.25rem;font-weight:900}
+.sheet .z{font-size:1.05rem;color:var(--ink)}.sheet .py{font-size:.82rem;opacity:.85}
+.sheet.ok .btn{--ac:var(--jade);--acd:var(--jade-d)}.sheet.no .btn{--ac:var(--red);--acd:var(--red-d)}
+
+/* done */
+.done{align-items:center;text-align:center}
+.medal{width:96px;height:96px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font-size:2.8rem;font-weight:900;box-shadow:0 6px 0 var(--gold-d);animation:pop .4s ease-out}
+.done h3{margin:0;font-size:1.5rem;font-weight:900}
+.score{font-size:3rem;font-weight:900;font-variant-numeric:tabular-nums;color:var(--ac)}
+.bigstars{font-size:2.2rem}
+.review{width:100%;text-align:left;display:flex;flex-direction:column;gap:8px}
+.review div{background:var(--bad-bg);color:var(--bad-ink);border-radius:12px;padding:9px 12px;font-size:.9rem;font-weight:700}
+.review .z{color:var(--ink)}
+
+/* writing */
+.wwrap{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.wwrap{grid-template-columns:minmax(0,1fr)}}
+.board{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cpy{font-weight:900;color:var(--ac);font-size:1.15rem;min-height:1.3em}
+.box{position:relative;width:var(--size);height:var(--size);max-width:100%;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:3px solid var(--grid);border-radius:10px;background:var(--card)}
+.box svg.grid{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.box svg.grid line{stroke:var(--grid-soft);stroke-width:1.5px;stroke-dasharray:7 6;vector-effect:non-scaling-stroke}
+#target{position:absolute;inset:0}
+.wstatus{min-height:1.4em;font-size:.95rem;font-weight:800;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.wstatus.good{color:var(--jade)}.wstatus.bad{color:var(--red)}
+.wside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.wword{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.wword .z{font-size:2rem;font-weight:900}.wword .p{font-weight:900;color:var(--ac)}.wword .e{flex-basis:100%;color:var(--muted);font-weight:700}
+.cgrid{display:flex;flex-wrap:wrap;gap:8px}
+.cbtn{width:46px;height:46px;border:2px solid var(--line);background:var(--card);border-radius:12px;font-family:var(--f-han);font-size:1.25rem;cursor:pointer;position:relative;box-shadow:0 3px 0 var(--line)}
+.cbtn[aria-current="true"]{border-color:var(--ac);box-shadow:0 3px 0 var(--acd)}
+.cbtn.ok{background:var(--ac);color:#fff;border-color:var(--ac);box-shadow:0 3px 0 var(--acd)}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mbtn{border:2px solid var(--line);background:var(--card);border-radius:14px;padding:9px 6px;font-weight:900;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;box-shadow:0 3px 0 var(--line)}
+.mbtn small{font-weight:700;font-size:.7rem;color:var(--muted)}
+.mbtn[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff;box-shadow:0 3px 0 var(--acd)}.mbtn[aria-pressed="true"] small{color:#fff}
+.opts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;font-weight:700;color:var(--muted)}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+/* word list */
+.vlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.vc{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px 14px;display:flex;gap:12px;align-items:center;cursor:pointer;text-align:left;box-shadow:0 4px 0 var(--line)}
+.vc:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.vc .w{font-size:1.6rem;font-weight:900}.vc .p{font-weight:900;color:var(--ac);font-size:.92rem}.vc .en{font-size:.8rem;color:var(--muted);font-weight:700}
+.vc .badge{margin-left:auto;align-self:flex-start;font-size:.7rem;font-weight:900;color:var(--muted)}
+.vc .badge.ok{color:var(--jade)}
+.err{background:var(--bad-bg);color:var(--bad-ink);padding:12px 14px;border-radius:12px;font-weight:800}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--gold);color:#fff;padding:8px 16px;border-radius:999px;font-weight:900;box-shadow:0 3px 0 var(--gold-d);opacity:0;transition:opacity .25s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app" id="app"><p class="muted">Memuat pelajaran…</p></div>
+<div class="sheet" id="sheet" aria-live="polite"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.2/dist/hanzi-writer.min.js"></script>
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const cls = L => 'c' + (((L.n - 1) % 5) + 1);
+let LS = [], CHARS = null;
+
+/* ---------- icons ---------- */
+const I = {
+  star: '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>',
+  fire: '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c1 3.5 5 5.6 5 10.3A5 5 0 0 1 7 12.6c0-1.9.9-3.3 2-4.4.2 1.6 1 2.6 2.2 3C11 8.3 11.5 4.8 12 2z"/></svg>',
+  spk: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.47 4.47 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>'
+};
+
+/* ---------- progress ---------- */
+const KEY = 'hsk4a-path-v1';
+let P = { xp: 0, days: [], les: {} };
+try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && typeof s === 'object') P = Object.assign(P, s); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
+const LP = n => { const o = (P.les[n] = P.les[n] || {}); o.known = o.known || []; o.wrote = o.wrote || []; o.steps = o.steps || {}; o.best = o.best || 0; return o; };
+const today = () => new Date().toISOString().slice(0, 10);
+function touchDay() { const d = today(); if (!P.days.includes(d)) { P.days.push(d); P.days = P.days.slice(-400); save(); } }
+function streak() { const s = new Set(P.days); let n = 0; const d = new Date(); if (!s.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1); while (s.has(d.toISOString().slice(0, 10))) { n++; d.setDate(d.getDate() - 1); } return n; }
+let tt; function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('on'), 1300); }
+function addXP(n, msg) { if (!n) return; P.xp += n; touchDay(); save(); toast(`+${n} XP${msg ? ' · ' + msg : ''}`); const x = $('#xp'); if (x) x.textContent = P.xp; }
+const starsOf = b => b >= 100 ? 3 : b >= 80 ? 2 : b >= 60 ? 1 : 0;
+const starsHTML = (b, big) => { const s = starsOf(b); return `<span class="stars${big ? ' bigstars' : ''}" aria-label="${s} dari 3 bintang">${'★'.repeat(s)}<span class="off">${'★'.repeat(3 - s)}</span></span>`; };
+
+/* ---------- lesson structure ---------- */
+const KINDS = [
+  { k: 'learn', ic: '词', name: 'Kata baru', sub: '生词' }, { k: 'text', ic: '文', name: 'Teks', sub: '课文' },
+  { k: 'gram', ic: '法', name: 'Tata bahasa', sub: '语法' }, { k: 'write', ic: '写', name: 'Menulis', sub: '写字' },
+  { k: 'quiz', ic: '测', name: 'Kuis', sub: '小测' }];
+const FINAL = [{ k: 'fill', ic: '练', name: 'Latihan buku', sub: '综合练习' }, { k: 'test', ic: '考', name: 'Tes lesson', sub: '单元测试' }];
+function stepsOf(L) {
+  const out = [], full = L.texts.some(t => t.lines.length);
+  const kinds = full ? KINDS : KINDS.filter(K => ['learn', 'write', 'quiz'].includes(K.k));
+  L.texts.forEach((t, i) => kinds.forEach(K => out.push({ id: `p${i + 1}-${K.k}`, part: i + 1, ...K })));
+  FINAL.filter(K => K.k !== 'fill' || L.fill.length).forEach(K => out.push({ id: `final-${K.k}`, part: 0, ...K }));
+  return out;
+}
+const pctOf = L => { const s = stepsOf(L), d = LP(L.n).steps; return Math.round(100 * s.filter(x => d[x.id]).length / s.length); };
+const nextStep = L => { const d = LP(L.n).steps; return stepsOf(L).find(x => !d[x.id]); };
+const partVocab = (L, p) => L.vocab.filter(v => v.t === p);
+const partChars = (L, p) => [...new Set(partVocab(L, p).map(v => v.w).join(''))];
+
+/* ---------- speech ---------- */
+const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+let zhVoice = null;
+function loadVoices() { try { const v = speechSynthesis.getVoices(); zhVoice = v.find(x => /zh[-_]CN/i.test(x.lang)) || v.find(x => /^zh/i.test(x.lang)) || null; } catch (e) {} }
+if (canSpeak) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) {} } else document.documentElement.classList.add('nospeech');
+function speak(text, onend) {
+  if (!canSpeak) { onend && onend(); return; }
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/[A-Z]：/g, '').replace(/＿＿/g, '')); u.lang = 'zh-CN'; u.rate = 0.85; if (zhVoice) u.voice = zhVoice; if (onend) { u.onend = onend; u.onerror = onend; } speechSynthesis.speak(u); } catch (e) { onend && onend(); }
+}
+const spk = (t, sm) => `<button type="button" class="spk${sm ? ' sm' : ''}" data-say="${esc(t)}" aria-label="Dengarkan">${I.spk}</button>`;
+
+/* ---------- routing ---------- */
+let S = null, writerToken = 0, writer = null;
+function hideSheet() { const s = $('#sheet'); s.className = 'sheet'; }
+function route() {
+  if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
+  writerToken++; S = null; hideSheet();
+  const h = location.hash; let m;
+  if ((m = h.match(/^#l(\d+)-(p\d-\w+|final-\w+)$/)) && LS[+m[1] - 1]) { const L = LS[+m[1] - 1], st = stepsOf(L).find(x => x.id === m[2]); if (st) return startStep(L, st); }
+  if ((m = h.match(/^#l(\d+)-w(\d+)$/)) && LS[+m[1] - 1] && LS[+m[1] - 1].vocab[+m[2]]) return startWord(LS[+m[1] - 1], +m[2]);
+  if ((m = h.match(/^#l(\d+)-words$/)) && LS[+m[1] - 1]) return renderWords(LS[+m[1] - 1]);
+  if ((m = h.match(/^#l(\d+)$/)) && LS[+m[1] - 1]) return renderLesson(LS[+m[1] - 1]);
+  renderHome();
+}
+const go = h => { if (location.hash === h) route(); else location.hash = h; };
+addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+const topbar = back => `<div class="top">${back ? `<button type="button" class="back" data-go="${back}" aria-label="Kembali">←</button>` : ''}<div class="brand"><span class="seal">学</span>HSK 4A</div>
+  <div class="stats"><span class="stat xp">${I.star}<span id="xp">${P.xp}</span></span><span class="stat fire">${I.fire}${streak()}</span></div></div>`;
+
+/* ---------- home ---------- */
+function renderHome() {
+  const cur = LS.find(L => pctOf(L) < 100) || LS[0], ns = nextStep(cur);
+  const total = LS.reduce((a, L) => a + stepsOf(L).length, 0), doneN = LS.reduce((a, L) => a + stepsOf(L).filter(x => LP(L.n).steps[x.id]).length, 0);
+  $('#app').innerHTML = topbar('') + `
+  <section class="banner ${cls(cur)}" data-han="学"><div class="kick">新HSK教程 · 4上</div><h1>Lanjutkan belajar</h1>
+    <p>Lesson ${cur.n} · ${esc(cur.zh)}${ns ? ` · berikutnya: ${ns.name}` : ''}</p>
+    <div class="row"><div class="bprog"><i style="width:${Math.round(100 * doneN / total)}%"></i></div><span class="bpct">${doneN} / ${total} tahap</span>
+    <button type="button" class="btn white" data-go="#l${cur.n}${ns ? '-' + ns.id : ''}">${ns ? 'Mulai' : 'Buka'} →</button></div></section>
+  <div class="lgrid">${LS.map(L => {
+    const p = pctOf(L), d = LP(L.n);
+    return `<button type="button" class="lcard ${cls(L)}${L === cur ? ' cur' : ''}" data-go="#l${L.n}"><span class="num">${L.n}</span>
+      <span style="min-width:0"><span class="t">${esc(L.zh)}</span><span class="e">${esc(L.en)}</span>
+      <span class="lmeta"><span class="mini"><i style="width:${p}%"></i></span><span>${p}%</span>${starsHTML(d.best)}</span></span></button>`;
+  }).join('')}</div>`;
+}
+
+/* ---------- lesson map ---------- */
+const OFF = [0, 56, 84, 56, 0, -56, -84, -56];
+function renderLesson(L) {
+  const d = LP(L.n), p = pctOf(L), ns = nextStep(L), all = stepsOf(L);
+  let k = 0;
+  const node = st => { const off = OFF[k++ % OFF.length], isNext = ns && ns.id === st.id;
+    return `<button type="button" class="node${d.steps[st.id] ? ' done' : ''}${isNext ? ' next' : ''}" style="transform:translateX(${off}px)" data-go="#l${L.n}-${st.id}">
+      ${isNext ? '<span class="go">MULAI</span>' : ''}<span class="bub">${st.ic}</span>${d.steps[st.id] ? '<span class="chk">✓</span>' : ''}<span class="lbl">${st.name}</span></button>`; };
+  const parts = L.texts.map((t, i) => `<div class="part"><span class="pn">Bagian ${i + 1}</span><span class="pt">${esc(t.title)} · ${partVocab(L, i + 1).length} kata</span></div>
+     <div class="trail">${all.filter(s => s.part === i + 1).map(node).join('')}</div>`).join('');
+  $('#app').innerHTML = topbar('#home') + `<div class="${cls(L)}">
+  <section class="banner" data-han="${esc(L.zh[0] === '“' ? L.zh[1] : L.zh[0])}"><div class="kick">第${L.n}课 · Lesson ${L.n}</div><h2>${esc(L.zh)}</h2><p>${esc(L.py)} · ${esc(L.en)}</p>
+    <div class="row"><div class="bprog"><i style="width:${p}%"></i></div><span class="bpct">${p}%</span>${starsHTML(d.best)}
+    ${ns ? `<button type="button" class="btn white" data-go="#l${L.n}-${ns.id}">Lanjut →</button>` : ''}</div></section>
+  ${parts}<div class="part"><span class="pn">Ulasan</span><span class="pt">${L.fill.length ? 'Latihan dari buku dan tes seluruh lesson' : 'Tes kosakata seluruh lesson'}</span></div>
+  <div class="trail">${all.filter(s => !s.part).map(node).join('')}</div>
+  <div class="tools"><button type="button" class="btn ghost" data-go="#l${L.n}-words">Daftar kata · latihan per kata</button></div></div>`;
+  const nx = $('.node.next'); if (nx) setTimeout(() => nx.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
+}
+
+/* ---------- word list ---------- */
+function renderWords(L) {
+  const d = LP(L.n);
+  $('#app').innerHTML = topbar(`#l${L.n}`) + `<div class="${cls(L)}"><section class="banner" data-han="词"><div class="kick">第${L.n}课 · Daftar kata</div><h2>${L.vocab.length} kata baru</h2>
+    <p>Ketuk kata untuk belajar dan menjawab soalnya · ${d.known.length} sudah dipelajari</p></section>
+  <div class="vlist">${L.vocab.map((v, i) => `<button type="button" class="vc" data-go="#l${L.n}-w${i}"><span class="w z">${esc(v.w)}</span><span style="min-width:0"><span class="p">${esc(v.p)}</span><br><span class="en">${esc(v.en)}</span></span>
+    <span class="badge${d.known.includes(v.w) ? ' ok' : ''}">${d.known.includes(v.w) ? '✓' : ''} 课文${v.t}</span></button>`).join('')}</div></div>`;
+}
+
+/* ---------- player shell ---------- */
+function shell(L, label, sub, inner, prog, info, closeTo) {
+  $('#app').innerHTML = `<div class="${cls(L)}"><div class="phead"><button type="button" class="close" data-go="${closeTo || '#l' + L.n}" aria-label="Tutup">✕</button>
+    <div class="pbar"><i style="width:${Math.max(3, Math.round(prog * 100))}%"></i></div><span class="pinfo">${info || ''}</span></div>
+    <div class="kicker"><span class="pill2">${label}</span><b class="z">${sub}</b></div>${inner}</div>`;
+}
+const stepLabel = st => st.part ? `Bagian ${st.part} · ${st.name}` : st.name;
+function startStep(L, st) { S = { L, st, i: 0 }; ({ learn: stLearn, text: stText, gram: stGram, write: stWrite, quiz: stQuiz, fill: stFill, test: stTest })[st.k](); }
+function render(inner, prog, info) { const { L, st } = S; if (S.word !== undefined) shell(L, 'Latihan kata', S.items[0].w, inner, prog, info, `#l${L.n}-words`); else shell(L, stepLabel(st), st.sub, inner, prog, info); }
+function finishStep(extra) {
+  hideSheet();
+  const { L, st } = S;
+  if (S.word !== undefined) {
+    render(`<div class="card done"><div class="medal">✓</div><h3>Kata ini sudah kamu latih</h3>${extra || ''}
+      <div class="actions" style="justify-content:center"><button type="button" class="btn ghost" data-go="#l${L.n}-words">Daftar kata</button>${L.vocab[S.word + 1] ? `<button type="button" class="btn" data-go="#l${L.n}-w${S.word + 1}">Kata berikutnya →</button>` : ''}</div></div>`, 1, '');
+    return;
+  }
+  const d = LP(L.n), first = !d.steps[st.id]; d.steps[st.id] = true; save(); if (first) addXP(10, 'tahap selesai');
+  const ns = nextStep(L);
+  render(`<div class="card done"><div class="medal">✓</div><h3>${st.name} selesai!</h3>${extra || ''}
+    <p class="muted" style="margin:0;font-weight:700">${ns ? `Berikutnya: ${ns.part ? 'Bagian ' + ns.part + ' · ' : ''}${ns.name}` : 'Semua tahap di lesson ini sudah selesai.'}</p>
+    <div class="actions" style="justify-content:center"><button type="button" class="btn ghost" data-go="#l${L.n}">Peta lesson</button>${ns ? `<button type="button" class="btn" data-go="#l${L.n}-${ns.id}">Lanjut →</button>` : LS[L.n] ? `<button type="button" class="btn" data-go="#l${L.n + 1}">Lesson ${L.n + 1} →</button>` : ''}</div></div>`, 1, '');
+}
+
+/* ---------- word learning (per word: card → meaning question → usage question) ---------- */
+function wordQs(L, v) {
+  const main = s => (s || '').split('/')[0];
+  const others = L.vocab.filter(x => x !== v && !x.w.includes(v.w) && !v.w.includes(x.w));
+  const byPos = shuffle(others.filter(x => main(x.pos) === main(v.pos))), rest = shuffle(others.filter(x => main(x.pos) !== main(v.pos)));
+  const d3 = [...byPos, ...rest].filter((x, i, a) => a.findIndex(y => y.en === x.en || y.w === x.w) === i).slice(0, 3);
+  const dm = shuffle(others).filter((x, i, a) => x.en !== v.en && a.findIndex(y => y.en === x.en) === i).slice(0, 3);
+  const at = v.ex[0].indexOf(v.w);
+  return [
+    { type: 'mean', v, opts: shuffle([v, ...dm]) },
+    { type: 'use', v, sent: [v.ex[0].slice(0, at), v.ex[0].slice(at + v.w.length)], opts: shuffle([v, ...d3]) }];
+}
+function stLearn() { const { L, st } = S; S.items = partVocab(L, st.part); S.screen = 0; S.right = 0; S.wrong = []; S.total = S.items.length * 3; learnScreen(); }
+function startWord(L, idx) { S = { L, st: { k: 'learn', part: L.vocab[idx].t }, word: idx, items: [L.vocab[idx]], screen: 0, right: 0, wrong: [], total: 3 }; learnScreen(); }
+function learnScreen() {
+  hideSheet();
+  const wi = Math.floor(S.screen / 3), phase = S.screen % 3, v = S.items[wi], info = `${wi + 1} / ${S.items.length} kata`;
+  if (!v) { const d = LP(S.L.n); S.items.forEach(x => d.known.includes(x.w) || d.known.push(x.w)); save(); const score = Math.round(100 * S.right / (S.items.length * 2));
+    return finishStep(`<div class="score">${score}%</div><p style="margin:0;font-weight:700">${S.right} dari ${S.items.length * 2} soal benar</p>${reviewHTML(S.wrong)}`); }
+  if (phase === 0) {
+    render(`<div class="card wcard"><span class="tag">Kata baru ${S.items.length > 1 ? `${wi + 1} dari ${S.items.length}` : ''}</span>
+      <div class="w">${esc(v.w)}</div><div class="lrow"><span class="p">${esc(v.p)}</span>${spk(v.w)}</div><div><span class="pos">${esc(v.pos)}</span><span class="en">${esc(v.en)}</span></div>
+      <div class="info"><span class="tag">搭配 · pasangan kata</span><div class="col">${v.col.map(c => `<span class="chipc"><span class="z">${esc(c[0])}</span> <span class="py">${esc(c[1])}</span><br>${esc(c[2])}</span>`).join('')}</div>
+        <span class="tag">例句 · contoh kalimat</span><div class="exl">${spk(v.ex[0], 1)}<div><div class="z">${hlWord(v.ex[0], v.w)}</div><div class="py">${esc(v.ex[1])}</div><div class="en">${esc(v.ex[2])}</div></div></div></div></div>
+      <div class="actions"><button type="button" class="btn" data-act="lnext">Coba jawab soalnya →</button></div>`, S.screen / S.total, info);
+    setTimeout(() => S && speak(v.w), 200);
+    return;
+  }
+  S.cur = wordQs(S.L, v)[phase - 1]; S.answered = false; drawQ(S.cur, S.screen / S.total, info);
+}
+const hlWord = (s, w) => { const i = s.indexOf(w); return i < 0 ? esc(s) : esc(s.slice(0, i)) + `<span class="hl">${esc(w)}</span>` + esc(s.slice(i + w.length)); };
+
+/* ---------- generic question drawing / answering ---------- */
+const KLAB = { mean: 'Apa artinya?', use: 'Pakai dalam kalimat', rev: 'Pilih hanzi', py: 'Pilih pinyin', listen: 'Dengarkan', comp: 'Pemahaman teks', fill: 'Isi kata (dari buku)' };
+function drawQ(q, prog, info) {
+  const vo = (o, i, m) => `<button type="button" class="qopt" data-qa="${i}">${m === 'en' ? `<span>${esc(o.en)}</span>` : m === 'py' ? `<span style="font-weight:900">${esc(o.p)}</span>` : `<span class="z">${esc(o.w)}</span>`}</button>`;
+  let pr = '', op = '';
+  if (q.type === 'mean') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span>${spk(q.v.w)}</div><div class="qsub">Pilih arti yang benar</div>`; op = q.opts.map((o, i) => vo(o, i, 'en')).join(''); }
+  if (q.type === 'use') { pr = `<div class="qsent">${esc(q.sent[0])}<span class="blank">?</span>${esc(q.sent[1])}</div><div class="qsub">${esc(q.v.ex[2])}</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'rev') { pr = `<div class="qsent" style="font-family:var(--f-ui);font-weight:800">“${esc(q.v.en)}”</div><div class="qsub">Pilih hanzi yang tepat</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'py') { pr = `<div class="qprompt"><span class="qbig">${esc(q.v.w)}</span></div><div class="qsub">Pilih pinyin yang benar</div>`; op = q.opts.map((o, i) => vo(o, i, 'py')).join(''); }
+  if (q.type === 'listen') { pr = `<div class="qprompt"><button type="button" class="btn" data-say="${esc(q.v.w)}">▶ Putar suara</button></div><div class="qsub">Kata apa yang kamu dengar?</div>`; op = q.opts.map((o, i) => vo(o, i, 'w')).join(''); }
+  if (q.type === 'fill') { const [a, b] = q.f.q.split('＿＿'); pr = `<div class="qsent">${esc(a)}<span class="blank">?</span>${esc(b ?? '')}</div><div class="qsub">${esc(q.f.full[2])}</div>`; op = q.opts.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o)}</span></button>`).join(''); }
+  if (q.type === 'comp') { pr = `<div class="qsent">${esc(q.c.q[0])}</div><div class="qsub">${esc(q.c.q[1])} · ${esc(q.c.q[2])}</div>`; op = q.c.o.map((o, i) => `<button type="button" class="qopt" data-qa="${i}"><span class="z">${esc(o[0])}</span><span class="py">${esc(o[1])} · ${esc(o[2])}</span></button>`).join(''); }
+  render(`<div class="card"><span class="qkind">${KLAB[q.type]}</span>${pr}<div class="qopts">${op}</div></div>`, prog, info);
+  if (q.type === 'listen') setTimeout(() => S && speak(q.v.w), 250);
+}
+function judge(q, i) {
+  let right, fb;
+  if (q.type === 'fill') { right = q.opts.indexOf(q.f.a); fb = `<span class="z">${esc(q.f.full[0])}</span><span class="py">${esc(q.f.full[1])}</span><span>${esc(q.f.why)}</span>`; }
+  else if (q.type === 'comp') { right = q.c.a; fb = q.c.why ? `${q.c.why[0] ? `<span class="z">${esc(q.c.why[0])}</span><span class="py">${esc(q.c.why[1])}</span>` : ''}<span>${esc(q.c.why[2])}</span>` : ''; }
+  else if (q.type === 'use') { right = q.opts.indexOf(q.v); fb = `<span class="z">${esc(q.v.ex[0])}</span><span class="py">${esc(q.v.ex[1])}</span><span>${esc(q.v.w)} = ${esc(q.v.en)}</span>`; speak(q.v.ex[0]); }
+  else { right = q.opts.indexOf(q.v); fb = `<span><span class="z">${esc(q.v.w)}</span> · ${esc(q.v.p)} · ${esc(q.v.en)}</span>`; speak(q.v.w); }
+  document.querySelectorAll('[data-qa]').forEach(b => { b.disabled = true; const k = +b.dataset.qa; if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong'); });
+  return { ok: i === right, fb };
+}
+function showSheet(ok, fb, label) {
+  const s = $('#sheet');
+  s.innerHTML = `<div class="in"><div class="txt"><b>${ok ? 'Benar!' : 'Belum tepat'}</b>${fb}</div><button type="button" class="btn" data-act="sheetnext">${label || 'Lanjut'}</button></div>`;
+  s.className = 'sheet on ' + (ok ? 'ok' : 'no');
+  setTimeout(() => { const b = s.querySelector('.btn'); b && b.focus({ preventScroll: true }); }, 50);
+}
+const reviewHTML = W => W.length ? `<div class="review"><span class="tag">Yang perlu diulang</span>${W.map(q => q.type === 'fill' ? `<div><span class="z">${esc(q.f.full[0])}</span></div>`
+  : q.type === 'comp' ? `<div><span class="z">${esc(q.c.q[0])}</span> → <span class="z">${esc(q.c.o[q.c.a][0])}</span></div>` : `<div><span class="z">${esc(q.v.w)}</span> · ${esc(q.v.p)} · ${esc(q.v.en)}</div>`).join('')}</div>` : '';
+
+/* ---------- text ---------- */
+let showPy = true, showEn = true;
+function stText() { S.shown = 1; S.autoSpeak = true; textShow(); }
+function textShow() {
+  const { L, st } = S, T = L.texts[st.part - 1], lines = T.lines, speakers = [...new Set(lines.map(l => l.s).filter(Boolean))];
+  const html = lines.slice(0, S.shown).map((l, i) => {
+    const nw = i === S.shown - 1 ? ' new' : '';
+    if (!l.s) return `<div class="para${nw}"><div style="flex:1;min-width:0"><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
+    const r = speakers.indexOf(l.s) % 2 === 1;
+    return `<div class="say${r ? ' r' : ''}${nw}"><span class="av">${esc(l.s[0])}</span><div class="msg"><div class="who">${esc(l.s)} · ${esc(l.sp)}</div><div class="z">${esc(l.zh)}</div><div class="py">${esc(l.py)}</div><div class="en">${esc(l.en)}</div></div>${spk(l.zh, 1)}</div>`;
+  }).join('');
+  const all = S.shown >= lines.length;
+  render(`<div class="card"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="muted" style="font-weight:800;font-size:.88rem">${esc(T.title)}</span>
+      <span class="toggles"><button type="button" class="tog" data-tg="py" aria-pressed="${showPy}">Pinyin</button><button type="button" class="tog" data-tg="en" aria-pressed="${showEn}">English</button></span></div>
+    <div class="tlines ${showPy ? '' : 'hide-py'} ${showEn ? '' : 'hide-en'}" id="tl">${html}</div></div>
+    <div class="actions"><button type="button" class="btn ghost left needspeech" data-act="playall">▶ Putar semua</button>
+      ${all ? `<button type="button" class="btn" data-act="tcheck">Cek pemahaman →</button>` : `<button type="button" class="btn" data-act="tnext">Lanjut →</button>`}</div>`,
+    0.6 * S.shown / lines.length, `${S.shown} / ${lines.length}`);
+  if (S.autoSpeak) setTimeout(() => S && speak(lines[S.shown - 1].zh), 150);
+  const tl = $('#tl'); if (tl && S.shown > 1) tl.lastElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+function playAll() {
+  const rows = [...document.querySelectorAll('#tl > div')]; let i = 0;
+  const step = () => { if (!S || S.st.k !== 'text' || i >= rows.length || !document.body.contains(rows[0])) return; const r = rows[i++]; r.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); r.classList.remove('new'); void r.offsetWidth; r.classList.add('new'); speak(r.querySelector('.z').textContent, () => setTimeout(step, 250)); };
+  step();
+}
+
+/* ---------- grammar ---------- */
+function stGram() {
+  const { L, st } = S, g = L.grammar[st.part - 1];
+  render(`<div class="card"><span class="qkind">小语讲堂 ${st.part}</span><h3 style="margin:0;font-size:1.25rem;font-weight:900">${esc(g.title)}</h3><p style="margin:0;line-height:1.6;font-weight:600">${esc(g.note)}</p>
+    <span class="tag">Contoh</span>${g.ex.map(x => `<div class="exl">${spk(x[0], 1)}<div><div class="z">${esc(x[0])}</div><div class="py">${esc(x[1])}</div><div class="en">${esc(x[2])}</div></div></div>`).join('')}</div>
+    <div class="actions"><button type="button" class="btn" data-act="gdone">Saya mengerti ✓</button></div>`, 0.5, '');
+}
+
+/* ---------- writing ---------- */
+let wMode = 'practice';
+function stWrite() {
+  S.chars = partChars(S.L, S.st.part); S.i = 0;
+  render(`<div class="card"><div class="wwrap"><div class="board"><div class="cpy" id="cpy"></div><div class="box" id="box">
+      <svg class="grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="50" x2="100" y2="50"/><line x1="50" y1="0" x2="50" y2="100"/><line x1="0" y1="0" x2="100" y2="100"/><line x1="100" y1="0" x2="0" y2="100"/></svg>
+      <div id="target"></div></div><div class="wstatus" id="wst"></div></div>
+    <div class="wside"><div class="wword" id="wword"></div>
+      <div class="modes"><button type="button" class="mbtn" data-wm="tutor">Tutor<small>lihat urutan</small></button><button type="button" class="mbtn" data-wm="practice">Latihan<small>ada bayangan</small></button><button type="button" class="mbtn" data-wm="test">Tes<small>dari ingatan</small></button></div>
+      <div class="opts"><label><input type="checkbox" id="oAuto" checked> Tutor dulu</label><label><input type="checkbox" id="oSlow"> Tutor pelan</label></div>
+      <div><p class="tag" style="margin:0 0 8px">Karakter di bagian ini</p><div class="cgrid" id="cgrid"></div></div></div></div></div>
+    <div class="actions"><button type="button" class="btn ghost left" data-act="wskip">Lewati</button><button type="button" class="btn" data-act="wdone">Selesai ✓</button></div>`, 0, '');
+  if (!window.HanziWriter || !CHARS) { $('#wst').innerHTML = '<span class="err">Data tulisan belum termuat. Muat ulang halaman.</span>'; return; }
+  writeChar($('#oAuto').checked ? 'tutor' : 'practice');
+}
+function writeProgress() {
+  const { L, chars } = S, d = LP(L.n), n = chars.filter(c => d.wrote.includes(c)).length;
+  $('.pbar i').style.width = Math.max(3, Math.round(100 * n / chars.length)) + '%'; $('.pinfo').textContent = `${n} / ${chars.length} karakter`;
+  $('#cgrid').innerHTML = chars.map((c, i) => `<button type="button" class="cbtn${d.wrote.includes(c) ? ' ok' : ''}" data-wc="${i}" aria-current="${i === S.i}">${c}</button>`).join('');
+}
+function boxSize() { const w = $('.card').clientWidth - 48, narrow = innerWidth <= 760; return Math.max(220, Math.min(420, Math.floor(narrow ? w : Math.min(w * 0.56, innerHeight - 240)))); }
+function writeChar(mode) {
+  const t = ++writerToken; wMode = mode;
+  const { L, chars } = S, c = chars[S.i], v = L.vocab.find(x => x.w.includes(c)), si = v.w.indexOf(c);
+  document.querySelectorAll('[data-wm]').forEach(b => b.setAttribute('aria-pressed', b.dataset.wm === mode));
+  $('#cpy').textContent = `${c}  ${v.s[si] || ''}`;
+  $('#wword').innerHTML = `<span class="z">${esc(v.w)}</span><span class="p">${esc(v.p)}</span>${spk(v.w, 1)}<span class="e">${esc(v.en)}</span>`;
+  writeProgress();
+  const size = boxSize(); $('#box').style.setProperty('--size', size + 'px'); $('#target').innerHTML = '';
+  const slow = $('#oSlow').checked, ac = getComputedStyle($('.card')).getPropertyValue('--ac').trim() || css('--jade');
+  writer = HanziWriter.create('target', c, {
+    width: size, height: size, padding: Math.round(size * 0.06), showCharacter: false, showOutline: mode !== 'test',
+    charDataLoader: (ch, ok, err) => CHARS[ch] ? ok(CHARS[ch]) : err(),
+    strokeColor: css('--ink'), outlineColor: css('--outline'), highlightColor: ac, drawingColor: css('--ink'),
+    drawingWidth: Math.max(14, Math.round(size / 18)), strokeAnimationSpeed: slow ? 0.6 : 1.1, delayBetweenStrokes: slow ? 450 : 220, highlightOnComplete: true });
+  const n = CHARS[c].strokes.length, st = (x, k) => { const e = $('#wst'); if (e) { e.textContent = x; e.className = 'wstatus' + (k ? ' ' + k : ''); } };
+  if (mode === 'tutor') { st(`Perhatikan urutan ${n} goresan…`); writer.animateCharacter({ onComplete: () => t === writerToken && setTimeout(() => t === writerToken && writeChar('practice'), 600) }); return; }
+  st(`${mode === 'test' ? 'Tes' : 'Latihan'} · 0 / ${n} goresan`);
+  writer.quiz({ showHintAfterMisses: mode === 'test' ? 3 : 2, leniency: 1.1,
+    onCorrectStroke: d => t === writerToken && st(`${mode === 'test' ? 'Tes' : 'Latihan'} · ${d.strokeNum + 1} / ${n} goresan${d.totalMistakes ? ` · salah ${d.totalMistakes}` : ''}`),
+    onMistake: d => t === writerToken && st(`Goresan ${d.strokeNum + 1} belum tepat${d.mistakesOnStroke >= (mode === 'test' ? 3 : 2) ? ' · ikuti petunjuk' : ''}`, 'bad'),
+    onComplete: d => {
+      if (t !== writerToken) return;
+      const p = LP(S.L.n); if (!p.wrote.includes(c)) { p.wrote.push(c); save(); addXP(2, c); }
+      st(d.totalMistakes ? `Selesai · ${d.totalMistakes} kali salah` : 'Sempurna!', 'good'); writeProgress();
+      setTimeout(() => { if (t !== writerToken) return; const nx = nextWriteIdx(); if (nx < 0) finishStep(); else { S.i = nx; writeChar(mode === 'test' ? 'test' : ($('#oAuto').checked ? 'tutor' : 'practice')); } }, 1100);
+    } });
+}
+function nextWriteIdx() { const d = LP(S.L.n), ch = S.chars; for (let k = 1; k <= ch.length; k++) { const j = (S.i + k) % ch.length; if (!d.wrote.includes(ch[j])) return j; } return -1; }
+
+/* ---------- quiz steps ---------- */
+function vocabQs(L, pool, n) {
+  const V = L.vocab, qs = [];
+  const others = (v, f) => shuffle(V.filter(x => f(x) !== f(v))).filter((x, i, a) => a.findIndex(y => f(y) === f(x)) === i).slice(0, 3);
+  const types = canSpeak ? ['use', 'mean', 'rev', 'py', 'listen'] : ['use', 'mean', 'rev', 'py'];
+  shuffle(pool).slice(0, n).forEach((v, i) => {
+    const ty = types[i % types.length];
+    if (ty === 'use') { qs.push(wordQs(L, v)[1]); return; }
+    const f = ty === 'mean' ? x => x.en : ty === 'py' ? x => x.p : x => x.w;
+    qs.push({ type: ty, v, opts: shuffle([v, ...others(v, f)]) });
+  });
+  return qs;
+}
+const compQs = cs => cs.map(c => ({ type: 'comp', c }));
+const fillQs = fs => fs.map(f => ({ type: 'fill', f, opts: shuffle(f.bank) }));
+function runQuiz(qs, onDone) { S.qs = qs; S.qi = 0; S.right = 0; S.wrong = []; S.onDone = onDone; S.mode = 'quiz'; S.cur = qs[0]; S.answered = false; drawQ(S.cur, 0, `1 / ${qs.length}`); }
+function resultHTML() { const score = Math.round(100 * S.right / S.qs.length); return { score, html: `<div class="score">${score}%</div>${starsHTML(score, 1)}<p style="margin:0;font-weight:700">${S.right} dari ${S.qs.length} benar</p>${reviewHTML(S.wrong)}` }; }
+function stQuiz() { const { L, st } = S, pv = partVocab(L, st.part); runQuiz([...vocabQs(L, pv, Math.min(8, pv.length)), ...compQs(L.comp.filter(c => c.t === st.part))], () => { addXP(S.right, 'kuis'); finishStep(resultHTML().html); }); }
+function stFill() { runQuiz(shuffle(fillQs(S.L.fill)), () => { addXP(S.right, 'latihan'); finishStep(resultHTML().html); }); }
+function stTest() {
+  const { L } = S;
+  runQuiz(shuffle([...vocabQs(L, L.vocab, 10), ...fillQs(pick(L.fill, 3)), ...compQs(pick(L.comp, 2))]), () => {
+    const r = resultHTML(), d = LP(L.n), was = d.best; if (r.score > d.best) { d.best = r.score; save(); }
+    addXP(S.right * 2, 'tes'); finishStep(r.html + (r.score > was ? '<p style="margin:0;color:var(--jade);font-weight:900">Skor terbaik baru!</p>' : '') + `<button type="button" class="btn ghost" data-act="retest">Ulangi tes</button>`);
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.say) { speak(t.dataset.say); return; }
+  if (t.dataset.go !== undefined) { go(t.dataset.go || '#home'); return; }
+  if (!S) return;
+  const a = t.dataset.act, L = S.L;
+  if (t.dataset.qa !== undefined) {
+    if (S.answered) return; S.answered = true;
+    const r = judge(S.cur, +t.dataset.qa);
+    if (r.ok) S.right++; else S.wrong.push(S.cur);
+    const last = S.mode === 'quiz' ? S.qi >= S.qs.length - 1 : false;
+    showSheet(r.ok, r.fb, last ? 'Lihat hasil' : 'Lanjut');
+    return;
+  }
+  if (a === 'sheetnext') {
+    hideSheet();
+    if (S.mode === 'quiz') { S.qi++; if (S.qi < S.qs.length) { S.cur = S.qs[S.qi]; S.answered = false; drawQ(S.cur, S.qi / S.qs.length, `${S.qi + 1} / ${S.qs.length}`); } else S.onDone(); }
+    else { S.screen++; learnScreen(); }
+    return;
+  }
+  if (a === 'lnext') { S.screen++; learnScreen(); return; }
+  if (a === 'tnext') { S.shown++; S.autoSpeak = true; textShow(); return; }
+  if (a === 'playall') { S.shown = L.texts[S.st.part - 1].lines.length; S.autoSpeak = false; textShow(); playAll(); return; }
+  if (a === 'tcheck') { const cs = L.comp.filter(c => c.t === S.st.part); if (cs.length) runQuiz(compQs(cs), () => finishStep(resultHTML().html)); else finishStep(); return; }
+  if (t.dataset.tg) { if (t.dataset.tg === 'py') showPy = !showPy; else showEn = !showEn; S.autoSpeak = false; textShow(); return; }
+  if (a === 'gdone') { finishStep(); return; }
+  if (t.dataset.wm) { writeChar(t.dataset.wm); return; }
+  if (t.dataset.wc !== undefined) { S.i = +t.dataset.wc; writeChar($('#oAuto').checked ? 'tutor' : 'practice'); return; }
+  if (a === 'wskip') { S.i = (S.i + 1) % S.chars.length; writeChar(wMode === 'test' ? 'test' : ($('#oAuto').checked ? 'tutor' : 'practice')); return; }
+  if (a === 'wdone') { writerToken++; finishStep(); return; }
+  if (a === 'retest') { startStep(L, S.st); return; }
+});
+document.addEventListener('change', e => { if (e.target.id === 'oSlow' && S && S.st.k === 'write' && wMode === 'tutor') writeChar('tutor'); });
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (S && S.st.k === 'write' && CHARS && $('#box')) writeChar(wMode === 'tutor' ? 'practice' : wMode); }, 250); });
+
+/* ---------- boot ---------- */
+fetch('lessons.json').then(r => r.json()).then(d => { LS = d; touchDay(); route(); fetch('chars.json').then(r => r.json()).then(c => { CHARS = c; if (S && S.st.k === 'write') startStep(S.L, S.st); }).catch(() => {}); })
+  .catch(() => { $('#app').innerHTML = '<p class="err">Data pelajaran gagal dimuat. Muat ulang halaman.</p>'; });
+})();
+</script>
+
+</body>
+</html>
