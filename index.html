@@ -308,15 +308,38 @@ const setCtl = () => `<span class="setc"><button type="button" class="tog" data-
 /* ---------- speech ---------- */
 const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 let zhVoice = null;
-function loadVoices() { try { const v = speechSynthesis.getVoices(); zhVoice = v.find(x => /zh[-_]CN/i.test(x.lang)) || v.find(x => /^zh/i.test(x.lang)) || null; } catch (e) {} }
+function loadVoices() { try {
+  const v = speechSynthesis.getVoices().filter(x => /^zh[-_]CN/i.test(x.lang) || /^cmn/i.test(x.lang));
+  const score = x => (/premium|enhanced|natural|neural|xiaoxiao|yunxi/i.test(x.name) ? 10 : 0) + (/google/i.test(x.name) ? 5 : 0) + (/lili|yu-?shu|tingting/i.test(x.name) ? 2 : 0) + (x.localService ? 0 : 1);
+  zhVoice = v.sort((a, b) => score(b) - score(a))[0] || speechSynthesis.getVoices().find(x => /^zh/i.test(x.lang)) || null; } catch (e) {} }
 if (canSpeak) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) {} } else document.documentElement.classList.add('nospeech');
 // One voice at a time: every new request cancels the old one, waits until the engine is really quiet
 // (Safari/iOS keep talking for a moment after cancel()), and stale callbacks are ignored via a token.
 let sayTok = 0, curUtt = null, scr = 0;
-function stopSpeech() { sayTok++; if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {} }
+// Recorded audio (natural voice, audio/*.mp3) when available; browser voice only as a fallback.
+const AUD = {}; let audOK = false;
+const player = new Audio(); player.preload = 'auto';
+const SILENT = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAACAAAA/oAR0dHR0dHR0dHR0dHYmJiYmJiYmJiYmJifHx8fHx8fHx8fHx8fJaWlpaWlpaWlpaWlrGxsbGxsbGxsbGxsbHLy8vLy8vLy8vLy8vl5eXl5eXl5eXl5eXl////////////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQC1AAAAAAAAAP6yysejgAAAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NCxKMAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//NAxKQAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80LEowAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80DEpAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsSjAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+let unlocked = false;
+document.addEventListener('pointerdown', () => { if (unlocked) return; unlocked = true; try { player.src = SILENT; const p = player.play(); p && p.catch(() => {}); } catch (e) {} }, { capture: true });
+function stopSpeech() { sayTok++; try { player.pause(); } catch (e) {} if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {} }
+function audKey(t) { if (AUD[t]) return AUD[t]; const c = t.replace(/[A-Z]：/g, '').replace(/＿＿/g, '').trim(); return AUD[c] || null; }
 function speak(text, onend) {
+  const id = audOK && audKey(text);
+  if (id) {
+    const tok = ++sayTok; try { player.pause(); } catch (e) {} if (canSpeak) try { speechSynthesis.cancel(); } catch (e) {}
+    const done = () => { if (tok === sayTok && onend) onend(); };
+    player.onended = done; player.onerror = () => { if (tok === sayTok) ttsSpeak(text, onend, tok); };
+    player.src = 'audio/' + id + '.mp3'; player.playbackRate = SET.slow ? 0.7 : 1;
+    try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch (e) {}
+    const p = player.play(); if (p) p.catch(() => { if (tok === sayTok) ttsSpeak(text, onend, tok); });
+    return;
+  }
+  ttsSpeak(text, onend);
+}
+function ttsSpeak(text, onend, keepTok) {
   if (!canSpeak) { onend && onend(); return; }
-  const tok = ++sayTok, t0 = Date.now();
+  const tok = keepTok || ++sayTok, t0 = Date.now();
   try { speechSynthesis.cancel(); } catch (e) {}
   const go = () => {
     if (tok !== sayTok) return;
@@ -434,7 +457,7 @@ function wordQs(L, v) {
   const dp = shuffle(others).filter((x, i, a) => x.p !== v.p && a.findIndex(y => y.p === x.p) === i).slice(0, 3);
   let mid;
   if (cols.length) { const c = cols[Math.floor(Math.random() * cols.length)], k = c[0].indexOf(v.w); mid = { type: 'col', v, c, sent: [c[0].slice(0, k), c[0].slice(k + v.w.length)], opts: shuffle([v, ...shuffle(d3)]) }; }
-  else if (canSpeak) mid = { type: 'listen', v, opts: shuffle([v, ...d3]) };
+  else if (canSpeak || audOK) mid = { type: 'listen', v, opts: shuffle([v, ...d3]) };
   else mid = { type: 'py', v, opts: shuffle([v, ...dp]) };
   return [
     { type: 'mean', v, opts: shuffle([v, ...dm]) },
@@ -611,7 +634,7 @@ function nextWriteIdx() { const d = LP(S.L.n), ch = S.chars; for (let k = 1; k <
 function vocabQs(L, pool, n) {
   const V = L.vocab, qs = [];
   const others = (v, f) => shuffle(V.filter(x => f(x) !== f(v))).filter((x, i, a) => a.findIndex(y => f(y) === f(x)) === i).slice(0, 3);
-  const types = canSpeak ? ['use', 'mean', 'rev', 'py', 'listen'] : ['use', 'mean', 'rev', 'py'];
+  const types = (canSpeak || audOK) ? ['use', 'mean', 'rev', 'py', 'listen'] : ['use', 'mean', 'rev', 'py'];
   shuffle(pool).slice(0, n).forEach((v, i) => {
     const ty = types[i % types.length];
     if (ty === 'use') { qs.push(wordQs(L, v)[2]); return; }
@@ -677,6 +700,7 @@ let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() 
 
 /* ---------- boot ---------- */
 applySet();
+fetch('audio/index.json').then(r => r.ok ? r.json() : {}).then(m => { Object.assign(AUD, m); audOK = Object.keys(AUD).length > 0; if (audOK) document.documentElement.classList.remove('nospeech'); }).catch(() => {});
 fetch('lessons.json').then(r => r.json()).then(d => { LS = d; d.forEach(L => L.vocab.forEach(v => { VMAP[v.w] = VMAP[v.w] || v.p; })); touchDay(); route(); fetch('chars.json').then(r => r.json()).then(c => { CHARS = c; if (S && S.st.k === 'write') startStep(S.L, S.st); }).catch(() => {}); })
   .catch(() => { $('#app').innerHTML = `<p class="err">${T('Data pelajaran gagal dimuat. Muat ulang halaman.', 'Lesson data failed to load. Reload the page.')}</p>`; });
 })();
